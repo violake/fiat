@@ -25,9 +25,9 @@ class BankServer
   #
   # return : string  - customer deposit code
   #
-  def getcustomercode(account_id)
-    result = Codecal.bank_customer_code_generate(account_id, @currency)
-    raise CODECALRPCError, result[:error] if result[:error]
+  def getcustomercode(account_id, currency)
+    result = Codecal.bank_customer_code_generate(account_id, currency)
+    raise CodecalRPCError, result[:error] if result[:error]
     result[:customer_code]   #Customer Code
   end
  
@@ -45,10 +45,10 @@ class BankServer
   #   ismine => <ismine>     : boolean  - true if this 'customer deposit code' is mine
   # }
   #
-  def validatecustomercode(customer_code, account_id)
+  def validatecustomercode(customer_code, account_id, currency)
     valid = Codecal.validate_bank_customer_code(customer_code)
-    check_result = getcustomercode(account_id, @currency) if valid
-    {isvalid: valid, ismine: check_result ? check_result[:customer_code]==customer_code : false}
+    check_result = getcustomercode(account_id, currency) if valid
+    {isvalid: valid, ismine: check_result ? check_result==customer_code : false}
   end
 
   #==== deposit rabbitmq command

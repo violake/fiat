@@ -17,10 +17,9 @@ RSpec.describe BankServer do
                           "done_at"=> "20170901123456"} }
   let!(:deposit) { create(:accepted_deposit) }
   let!(:undone_deposit) { create(:submitting_deposit) }
-  
+  let(:rpc) { {"account_id"=> 5, "currency"=>"aud"} }
 
-  # Test suite for GET /payments
-  describe 'deposit message comes' do
+  describe 'autodeposit message comes' do
 
     it 'new accepted deposit, returns true' do
       result = @bs.autodeposit({"payment_id"=> payment_id,"deposit"=> deposit_remote})
@@ -81,6 +80,34 @@ RSpec.describe BankServer do
       expect(result[:success]).to eq(true)
       expect(result[:payment_id]).to eq(payment_id)
       expect(Payment.find(payment_id).error_info).to eq("wrong customer code: no such account")
+    end
+  end
+
+  describe 'rpc call message comes' do
+    it 'return code when call generate customer code with valid params' do
+      customer_code = @bs.getcustomercode(rpc["account_id"], rpc["currency"])
+      expect(customer_code).not_to be_empty
+      expect(customer_code).to eq("0000000059036098")
+    end
+
+    it 'raise CodecalRPCError when call generate customer code with invalid params' do
+      expect { @bs.getcustomercode(rpc["account_id"], "fdas") }.to raise_error(CodecalRPCError)
+    end
+
+    it 'return json(valid:true) when call validate customer code with valid params' do
+      rpc["customer_code"]="0000000059036098"
+      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"], rpc["currency"])
+      expect(result).not_to be_empty
+      expect(result[:isvalid]).to eq(true)
+      expect(result[:ismine]).to eq(true)
+    end
+
+    it 'return json(valid:false) when call validate customer code with invalid params' do
+      rpc["customer_code"]="0000456059036098"
+      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"], rpc["currency"])
+      expect(result).not_to be_empty
+      expect(result[:isvalid]).to eq(false)
+      expect(result[:ismine]).to eq(false)
     end
   end
 end
