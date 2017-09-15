@@ -1,0 +1,15 @@
+# should create user and authenticate it if connect to a remote rabbitmq
+# in rabbitmq server side
+# rabbitmqctl add_user roger roger567
+# rabbitmqctl set_permissions -p / roger ".*" ".*" ".*"
+rabbitmq:
+  host: 172.17.0.4
+  port: 5672
+  user: roger
+  pass: roger567
+
+queue:
+  request:
+    name: fiat.deposit.request
+  response:
+    name: fiat.deposit.response
