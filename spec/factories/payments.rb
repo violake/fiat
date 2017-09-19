@@ -11,30 +11,35 @@ FactoryGirl.define do
     trait :new do
       after :create do |payment|
         payment.status = "new"
+        payment.save
       end
     end
 
-    trait :handled do
+    trait :sent do
       after :create do |payment|
-        payment.status = "handled"
+        payment.status = "sent"
+        payment.save
       end
     end
 
     trait :archived do
       after :create do |payment|
         payment.status = "archived"
+        payment.save
       end
     end
 
     trait :unreconciled do
       after :create do |payment|
         payment.result = "unreconciled"
+        payment.save
       end
     end
 
-    trait :conciled do
+    trait :reconciled do
       after :create do |payment|
-        payment.result = "conciled"
+        payment.result = "reconciled"
+        payment.save
       end
     end
 
@@ -42,9 +47,14 @@ FactoryGirl.define do
       after :create do |payment|
         payment.result = "error"
         payment.error_info = "lack of something"
+        payment.save
       end
     end
 
+    factory :new_payment, traits: [:new, :unreconciled]
+    factory :error_payment, traits: [:new, :error]
+    factory :reconciled_payment, traits: [:sent, :reconciled]
+    factory :unreconciled_payment, traits: [:sent, :unreconciled]
 
   end
 

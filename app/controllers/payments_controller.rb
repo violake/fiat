@@ -15,8 +15,12 @@ class PaymentsController < ApplicationController
 
   # GET /payments
   def index
-    @payments = Payment.all
-    json_response(@payments)
+    @payments = Payment.all.order(id: :desc)
+    @payments = @payments.with_result(params[:result]) if params[:result]
+    @payments = @payments.with_status(params[:status]) if params[:status]
+    count = @payments.size
+    @payments = @payments.paginate(page: params[:page_num], per_page: params[:per_page]) if params[:page_num] && params[:per_page]
+    json_response({count: count, data: @payments})
   end
 
   # GET /payments/:id
