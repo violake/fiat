@@ -23,6 +23,15 @@ class PaymentsController < ApplicationController
     json_response({count: count, data: @payments})
   end
 
+  def export
+    @payments = Payment.all.order(id: :desc)
+    @payments = @payments.with_result(params[:result]) if params[:result]
+    @payments = @payments.with_status(params[:status]) if params[:status]
+    csv = @payments.to_csv
+    send_data csv, filename: "payments-#{Time.now.strftime('%Y%m%d_%H%M%S')}.csv"
+
+  end
+
   # GET /payments/:id
   def show
     json_response(@payment)

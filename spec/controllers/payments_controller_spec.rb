@@ -47,4 +47,24 @@ RSpec.describe PaymentsController, type: :controller do
       expect(json['data'].size).to eq(2)
     end
   end
+
+  describe "get /payments/export filter test" do
+
+    it "When status = new and result = error" do
+      params = { "status"=>"new", "result"=>"error" }
+      get :export, params: params
+      expect(response.content_type).to eq("text/csv")
+      csv = response.body.split("\n")
+      expect(csv.size).to eq(4)
+    end
+
+    it "When status = new and result = error" do
+      params = { "status"=>"sent", "result"=>"unreconciled" }
+      get :export, params: params
+      expect(response.content_type).to eq("text/csv")
+      csv = response.body.split("\n")
+      expect(csv.size).to eq(6)
+    end
+
+  end
 end

@@ -19,6 +19,27 @@ class Payment < ApplicationRecord
     self.save
   end
 
+  def self.to_csv
+    attributes = %w{source_id
+                    source_name
+                    source_code
+                    country
+                    payment_type
+                    amount
+                    currency
+                    available
+                    created_at
+                    updated_at
+                    description
+                    sender_info}
 
+    CSV.generate(headers: true, force_quotes: true) do |csv|
+      csv << attributes
+
+      all.each do |payment|
+        csv << attributes.map{ |attr| payment.send(attr) }
+      end
+    end
+  end
 
 end

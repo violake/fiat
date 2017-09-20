@@ -9,6 +9,7 @@ require "action_controller/railtie"
 require "action_mailer/railtie"
 require "action_view/railtie"
 require "action_cable/engine"
+require "csv"
 # require "sprockets/railtie"
 # require "rails/test_unit/railtie"
 
@@ -20,6 +21,12 @@ module Fiat
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 5.1
+
+    #config.cache_store = :redis_store, ENV['REDIS_URL']
+    #config.session_store :redis_store, :key => ENV['SESSION_KEY'], :expire_after => ENV['SESSION_EXPIRE'].to_i.minutes
+
+    #config.middleware.use ActionDispatch::Cookies
+    #config.middleware.use config.session_store, config.session_options
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
