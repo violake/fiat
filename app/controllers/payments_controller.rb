@@ -5,12 +5,14 @@ class PaymentsController < ApplicationController
   # POST /payments
   def import
     uploaded_io = params[:payments]
-    if uploaded_io.tempfile.class != Tempfile
-      render json: {errors: 'no file uploaded'}, status: 400 
+    if !uploaded_io || uploaded_io.tempfile.class != Tempfile
+      render json: {error: 'no file uploaded'}, status: 400 
+    elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
+      render json: {error: "no timezone or error format eg: '+03:00' "}, status: 400
+    else
+      success, result = Fiat::PaymentImport.new.importPayments(uploaded_io.tempfile, params[:timezone])
+      json_response(success ? {:result => result} : {:error => result}, success ? 200 : 400) 
     end
-
-    success, result = Fiat::PaymentImport.new.importPayments(uploaded_io.tempfile)
-    json_response(success ? {:result => result} : {:error => result}, success ? 200 : 400)
   end
 
   # GET /payments

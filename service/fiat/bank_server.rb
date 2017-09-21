@@ -81,6 +81,7 @@ class BankServer
     else
       payment = Payment.find(payment_id)
       payment.error_info = params["error"]
+      payment.result = :error
       payment.save
       response[:success] = true
     end

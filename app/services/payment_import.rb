@@ -18,9 +18,10 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile read string
     ##
-    def importPayments(payments)
+    def importPayments(payments, timezone)
       begin
         @csv_str = payments.read
+        Payment.set_timezone(timezone)
         read_csv
         format_row
         check
@@ -29,6 +30,8 @@ module Fiat
         return true, @result
       rescue Exception=>e
         return false, e.message
+      ensure
+        Payment.timezone_reset
       end
     end
 
@@ -40,11 +43,12 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile -- read string
     ##
-    def importPaymentsFile(file)
+    def importPaymentsFile(file, timezone)
       begin
         raise "no source file" unless @file
         csv_path = File.expand_path(@file, File.dirname(__FILE__))
         @csv_str = File.read(csv_path)
+        Payment.set_timezone(timezone)
         read_csv
         format_row
         check
@@ -53,6 +57,8 @@ module Fiat
       rescue Exception=>e
         puts e.message
         puts e.backtrace.inspect
+      ensure
+        Payment.timezone_reset
       end
     end
 
@@ -63,7 +69,7 @@ module Fiat
       payments = @csv_str.split("\n")
       @data_read = Array.new
       payments.each do |line|
-        raise "line format error with quotation mark" unless line[0] == "\"" && line[-1] == "\""
+        raise "Line format error: Please upload CSV files and wrap quotation mark for each column data" unless line[0] == "\"" && line[-1] == "\""
         line = line[1..-2]
         strip_line = []
         line.split(/","/).each do |v|
@@ -96,7 +102,7 @@ module Fiat
         payclass = Fiat.const_get(payment[:payment_type])
         raise "payment type unknown ! \"#{payment[:payment_type]}\" " unless payclass
         pay = payclass.find_or_initialize_by(source_id: payment[:source_id], source_code: payment[:source_code])
-        if (!pay.status || pay.status == :new) && (pay.result == nil || pay.result == :unreconciled || pay.result == :error)
+        if(pay.valid_to_import?)
           pay.format(payment)
           pay.save
           @result[:imported] += 1

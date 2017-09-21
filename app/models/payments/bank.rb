@@ -10,14 +10,15 @@ module Fiat
       self.amount = bank[:amount]
       self.currency = bank[:currency]
       self.available = bank[:available] ? bank[:available] : "true"
-      self.created_at = bank[:created_at]
-      self.updated_at = bank[:updated_at]
+      self.created_at = convertTimeZone(bank[:created_at])
+      self.updated_at = convertTimeZone(bank[:updated_at])
       self.description = bank[:description]
       self.sender_info = bank[:sender_info]
       self.status = :new
-      customer_code = bank[:description].gsub(/\s+/, "").match(/[\d]{16}/)
+      customer_code = bank[:description].gsub(/\s+/, "").match(/[\d]{16}/) if bank[:description]
       self.customer_code = customer_code ? customer_code[0] : nil
       self.customer_code == nil ? self.result = :error : self.result = :unreconciled
+      self.error_info = nil
       self.error_info = "missing customer deposit code" if self.result == :error
     end
   end

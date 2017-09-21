@@ -50,9 +50,10 @@ RSpec.describe 'Payments API', type: :request do
   end
 
 
+  # POST /payments
 
-  describe 'POST /Payments correct payments' do
-    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_with_header.csv")) } }
+  describe 'POST /payments correct payments' do
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_with_header.csv")), timezone: "+08:00" } }
 
     before {post '/payments', params: payments}
 
@@ -70,13 +71,12 @@ RSpec.describe 'Payments API', type: :request do
   end
 
   describe 'POST /Payments no colname ' do
-    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_no_colname.csv")) } }
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_no_colname.csv")), timezone: "+08:00" } }
 
     before {post '/payments', params: payments}
 
     it "returns result of import" do
       expect(json['error']).to match(/column name missing/)
-
     end
 
     it "returns status code 400" do
@@ -84,12 +84,65 @@ RSpec.describe 'Payments API', type: :request do
     end
   end
 
+  describe 'POST /Payments no file ' do
+    before {post '/payments', params: {timezone: "+08:00"} }
+
+    it "returns result of import" do
+      expect(json['error']).to match(/no file uploaded/)
+    end
+
+    it "returns status code 400" do
+      expect(response).to have_http_status(400)
+    end
+  end
+
+  describe 'POST /Payments wrong filetype ' do
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/bank.rb")), timezone: "+08:00" } }
+    before {post '/payments', params: payments}
+
+    it "returns result of import" do
+      expect(json['error']).to match(/Line format error: Please upload CSV files and wrap quotation mark for each column data/)
+    end
+
+    it "returns status code 400" do
+      expect(response).to have_http_status(400)
+    end
+  end
+
+  describe 'POST /Payments no timezone ' do
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/bank.rb")) } }
+    before {post '/payments', params: payments }
+
+    it "returns result of import" do
+      expect(json['error']).to match(/no timezone or error format eg/)
+    end
+
+    it "returns status code 400" do
+      expect(response).to have_http_status(400)
+    end
+  end
+
+  describe 'POST /Payments error timezone ' do
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/bank.rb")), timezone: "28:00" } }
+    before {post '/payments', params: payments }
+
+    it "returns result of import" do
+      expect(json['error']).to match(/no timezone or error format/)
+    end
+
+    it "returns status code 400" do
+      expect(response).to have_http_status(400)
+    end
+  end
+
+
+
   describe 'POST /Payments, modify wrong status ' do
-    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_with_header.csv")) } }
+    let(:payments) { { payments:  Rack::Test::UploadedFile.new(Rails.root.join("spec/factories/payments_with_header.csv")), timezone: "+08:00" } }
 
     before {post '/payments', params: payments}
 
-    it "returns result of import reconciled payment" do
+    it "returns result of import reconciled payment and update unreconciled payment" do
       p = Payment.find_by(source_id:"06332152347234", source_code: "code3")
       p.result = 'reconciled'
       p.save
@@ -114,17 +167,37 @@ RSpec.describe 'Payments API', type: :request do
 
 
     it "returns result of import sent payment" do
-      p = Payment.find_by(source_id:"06332152347234", source_code: "code3")
+      p = Payment.find_by(source_id:"06398010987329", source_code: "code1")
       p.status = 'sent'
+      p.result = 'unreconciled'
       p.save
 
       post '/payments', params: payments
 
-      expect(json['result']['imported']).to eq(2)
-      expect(json['result']['ignored']).to eq(1)
-      expect(json['result']['error']).to eq(2)
+      expect(json['result']['imported']).to eq(1)
+      expect(json['result']['ignored']).to eq(2)
+      expect(json['result']['error']).to eq(1)
       expect(json['result']['sent']).to eq(0)
       expect(response).to have_http_status(200)
+      
+    end
+
+    it "returns result of import sent error payment" do
+      p = Payment.find_by(source_id:"06332152347234", source_code: "code3")
+      p.status = 'sent'
+      p.result = 'error'
+      p.error_info = 'custoer code error'
+      p.save
+
+      post '/payments', params: payments
+
+      expect(json['result']['imported']).to eq(3)
+      expect(json['result']['ignored']).to eq(0)
+      expect(json['result']['error']).to eq(2)
+      expect(json['result']['sent']).to eq(1)
+      expect(response).to have_http_status(200)
+      p_result = Payment.find_by(source_id:"06332152347234", source_code: "code3")
+      expect(p_result.error_info).to eq(nil)
       
     end
   end
