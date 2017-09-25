@@ -8,4 +8,5 @@ Rails.application.routes.draw do
   get '/payments/:id', to: 'payments#show'
   put '/payments/:id', to: 'payments#update'
   post '/payments', to: 'payments#import'
+  post '/payments/archive', to:'payments#archive'
 end

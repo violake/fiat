@@ -32,6 +32,13 @@ class Payment < ApplicationRecord
     self.save
   end
 
+  def archive!
+    if self.status != :new
+      self.status = :archived
+      self.save
+    end
+  end
+
   def convertTimeZone(timestr)
     return Time.zone.parse(timestr).to_s
   end

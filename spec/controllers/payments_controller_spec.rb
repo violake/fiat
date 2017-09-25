@@ -46,6 +46,23 @@ RSpec.describe PaymentsController, type: :controller do
       expect(json['count']).to eq(7)
       expect(json['data'].size).to eq(2)
     end
+
+    it "When from 5~8 days" do
+      params = { "page_num"=>2, "per_page"=>5, "created_at"=>Time.now - 5.days}
+      get :index, params: params
+      json = JSON.parse(response.body)
+      expect(json['count']).to eq(8)
+      expect(json['data'].size).to eq(3)
+    end
+
+    it "When from 15~18 days" do
+      params = { "page_num"=>2, "per_page"=>5, "created_at"=>Time.now - 15.days}
+      get :index, params: params
+      json = JSON.parse(response.body)
+      expect(json['count']).to eq(0)
+      expect(json['data'].size).to eq(0)
+    end
+
   end
 
   describe "get /payments/export filter test" do
@@ -66,5 +83,33 @@ RSpec.describe PaymentsController, type: :controller do
       expect(csv.size).to eq(6)
     end
 
+    it "When from 15~18 days" do
+      params = { "page_num"=>2, "per_page"=>5, "created_at"=>Time.now - 15.days}
+      get :export, params: params
+      expect(response.content_type).to eq("text/csv")
+      csv = response.body.split("\n")
+      expect(csv.size).to eq(1)
+    end
+
   end
+
+  describe "get /payments/export filter test" do
+    it "When before 15 days" do
+      params = { "archive_before"=>Time.now - 15.days}
+      get :archive, params: params
+      json = JSON.parse(response.body)
+      expect(response).to have_http_status(200)
+      expect(json['archived']).to eq(7)
+    end
+
+    it "When before 5 days" do
+      params = { "archive_before"=>Time.now - 5.days}
+      get :archive, params: params
+      json = JSON.parse(response.body)
+      expect(response).to have_http_status(400)
+      expect(json['error']).to match(/Please select a date and only record/)
+    end
+
+  end
+
 end

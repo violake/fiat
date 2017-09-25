@@ -1,2 +1,4 @@
 payment_type: ["bank"]
 log_level: DEBUG
+archive_limit: 7
+search_day_diff: 3

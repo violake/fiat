@@ -51,10 +51,31 @@ FactoryGirl.define do
       end
     end
 
-    factory :new_payment, traits: [:new, :unreconciled]
-    factory :error_payment, traits: [:new, :error]
-    factory :reconciled_payment, traits: [:sent, :reconciled]
-    factory :unreconciled_payment, traits: [:sent, :unreconciled]
+    trait :created_aweekago do
+      after :create do |payment|
+        payment.created_at = Time.now - 7.days
+        payment.save
+      end
+    end
+
+    trait :created_amonthage do
+      after :create do |payment|
+        payment.created_at = Time.now - 30.days
+        payment.save
+      end
+    end
+
+    trait :created_now do
+      after :create do |payment|
+        payment.created_at = Time.now
+        payment.save
+      end
+    end
+
+    factory :new_payment, traits: [:new, :unreconciled, :created_now]
+    factory :error_payment, traits: [:new, :error, :created_aweekago]
+    factory :reconciled_payment, traits: [:sent, :reconciled, :created_amonthage]
+    factory :unreconciled_payment, traits: [:sent, :unreconciled, :created_aweekago]
 
   end
 
