@@ -9,4 +9,8 @@ Rails.application.routes.draw do
   put '/payments/:id', to: 'payments#update'
   post '/payments', to: 'payments#import'
   post '/payments/archive', to:'payments#archive'
+
+  if Rails.env.development?
+    get '/fake_session', to:'application#fake_session'
+  end
 end

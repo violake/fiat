@@ -25,7 +25,7 @@ module Fiat
           raise "payments type error \"#{payment[:payment_type]}\" in line #{index} !!"
         end
         valid, errormsg = Fiat.const_get("#{payment[:payment_type]}Validation").validate(payment)
-        raise "payments data error: \"#{errormsg}\" in line #{index} !!" unless valid
+        raise "payments data error: #{errormsg} in line #{index+2} !!" unless valid
       end
     end
   end

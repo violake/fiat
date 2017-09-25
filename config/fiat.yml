@@ -1,4 +1,18 @@
-payment_type: ["bank"]
-log_level: DEBUG
-archive_limit: 7
-search_day_diff: 3
+default: &default
+  payment_type: ["bank"]
+  log_level: DEBUG
+  archive_limit: 7
+  search_day_diff: 3
+  email_whitelist: ["alice@123.com"]
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+
+fiat:
+  <<: *default

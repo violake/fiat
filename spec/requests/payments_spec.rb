@@ -76,7 +76,7 @@ RSpec.describe 'Payments API', type: :request do
     before {post '/payments', params: payments}
 
     it "returns result of import" do
-      expect(json['error']).to match(/column name missing/)
+      expect(json['base'][0]).to match(/column name missing/)
     end
 
     it "returns status code 400" do
@@ -88,7 +88,7 @@ RSpec.describe 'Payments API', type: :request do
     before {post '/payments', params: {timezone: "+08:00"} }
 
     it "returns result of import" do
-      expect(json['error']).to match(/no file uploaded/)
+      expect(json['payments'][0]).to match(/no file uploaded/)
     end
 
     it "returns status code 400" do
@@ -101,7 +101,7 @@ RSpec.describe 'Payments API', type: :request do
     before {post '/payments', params: payments}
 
     it "returns result of import" do
-      expect(json['error']).to match(/Line format error: Please upload CSV files and wrap quotation mark for each column data/)
+      expect(json['base'][0]).to match(/Line format error: Please upload CSV files and wrap quotation mark for each column data/)
     end
 
     it "returns status code 400" do
@@ -114,7 +114,7 @@ RSpec.describe 'Payments API', type: :request do
     before {post '/payments', params: payments }
 
     it "returns result of import" do
-      expect(json['error']).to match(/no timezone or error format eg/)
+      expect(json['timezone'][0]).to match(/no timezone or error format eg/)
     end
 
     it "returns status code 400" do
@@ -127,7 +127,7 @@ RSpec.describe 'Payments API', type: :request do
     before {post '/payments', params: payments }
 
     it "returns result of import" do
-      expect(json['error']).to match(/no timezone or error format/)
+      expect(json['timezone'][0]).to match(/no timezone or error format/)
     end
 
     it "returns status code 400" do

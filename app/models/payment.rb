@@ -62,7 +62,10 @@ class Payment < ApplicationRecord
                     created_at
                     updated_at
                     description
-                    sender_info}
+                    sender_info
+                    error_info
+                    status
+                    result}
 
     CSV.generate(headers: true, force_quotes: true) do |csv|
       csv << attributes

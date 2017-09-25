@@ -107,7 +107,7 @@ RSpec.describe PaymentsController, type: :controller do
       get :archive, params: params
       json = JSON.parse(response.body)
       expect(response).to have_http_status(400)
-      expect(json['error']).to match(/Please select a date and only record/)
+      expect(json['base'][0]).to match(/Please select a date and only record/)
     end
 
   end
