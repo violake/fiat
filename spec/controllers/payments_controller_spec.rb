@@ -15,6 +15,27 @@ RSpec.describe PaymentsController, type: :controller do
       expect(json['data'].size).to eq(25)
     end
 
+    it "When error paginate or filter" do
+      params = { "page_num"=>0, "per_page"=>"fds" }
+      get :index, params: params
+      json = JSON.parse(response.body)
+      expect(json['page_num'][0]).to match(/page_num should be Integer/)
+      expect(json['per_page'][0]).to match(/per_page should be Integer/)
+      expect(json.size).to eq(2)
+      expect(response).to have_http_status(400)
+    end
+
+    it "When error created_at" do
+      params = { "page_num"=>1, "per_page"=>10, "created_at"=>"20170733" }
+      get :index, params: params
+      json = JSON.parse(response.body)
+      expect(json['created_at'][0]).to match(/created_at should be date ti/)
+      expect(json.size).to eq(1)
+      expect(response).to have_http_status(400)
+    end
+
+
+
     it "When paginate" do
       params = { "page_num"=>2, "per_page"=>20 }
       get :index, params: params

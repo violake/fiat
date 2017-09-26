@@ -20,10 +20,15 @@ class PaymentsController < ApplicationController
 
   # GET /payments
   def index
-    search_payments
-    count = @payments.size
-    @payments = @payments.paginate(page: params[:page_num], per_page: search_params[:per_page]) if search_params[:page_num] && search_params[:per_page]
-    json_response({count: count, data: @payments})
+    messages = valid_search_params
+    if !messages || messages.size == 0
+      search_payments
+      count = @payments.size
+      @payments = @payments.paginate(page: params[:page_num], per_page: search_params[:per_page])
+      json_response({count: count, data: @payments})
+    else
+      json_response(messages, 400)
+    end
   end
 
   def export
@@ -58,8 +63,44 @@ class PaymentsController < ApplicationController
     @payments = Payment.all.order(id: :desc)
     @payments = @payments.with_result(search_params[:result]) if search_params[:result]
     @payments = @payments.with_status(search_params[:status]) if search_params[:status]
-    if search_params[:created_at] && Time.zone.parse(search_params[:created_at])
-      @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG["search_day_diff"].days,search_params[:created_at])
+    @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG["search_day_diff"].days,search_params[:created_at]) if search_params[:created_at]
+  end
+
+  def valid_search_params
+  search_params.to_h.inject({}) do |messages, (k, v)|
+      if v
+        case k
+        when "page_num"
+          messages.merge(valid_integer(k, v))
+        when "per_page"
+          messages.merge(valid_integer(k, v))
+        when "status"
+          messages.merge(valid_string_in_array(["new", "sent", "archived"], k, v))
+        when "result"
+          messages.merge(valid_string_in_array(["unreconciled", "reconciled", "error"], k, v))
+        when "created_at"
+          messages.merge(valid_time(k, v))
+        when "archive_before"
+          messages.merge(valid_time(k, v))
+        end
+      end
+    end
+  end
+
+  def valid_integer(name, integer)
+    if integer.to_i > 0 then {} else {name.to_sym => ["#{name} should be Integer"]} end
+  end
+
+  def valid_string_in_array(array, name, string)
+    if array.include?(string) then {} else {name.to_sym => ["#{name} should in #{array}"]} end
+  end
+
+  def valid_time(name, time)
+    begin
+      Time.zone.parse(time)
+      return {}
+    rescue ArgumentError=> e
+      {name.to_sym => ["#{name} should be date time: #{time}"]}
     end
   end
 
