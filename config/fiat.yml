@@ -3,7 +3,7 @@ default_value: &default
   log_level: DEBUG
   archive_limit: 7
   search_day_diff: 3
-  email_whitelist: ["alice@123.com"]
+  member_whitelist: ["1", "2"]
 
 development:
   <<: *default

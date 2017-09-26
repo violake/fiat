@@ -5,6 +5,7 @@ require 'codecal'
 require 'active_record'
 require 'enumerize'
 
+require './app/models/application_record'
 Dir['./app/models/*.rb'].each {|file| require file }
 Dir['./app/models/payments/*.rb'].each {|file| require file }
 require_relative '../../util/error_handler'
