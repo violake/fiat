@@ -43,6 +43,7 @@ rspec
   * `rake init:fiat_queues`
   * Database configuration
   * `rake db:create db:migrate`
+  * Config folder: ./config/. config files: database.yml, fiat.yml, rabbitmq.yml 
   * Configure supervisor refer to `contribs/supervisor.d/fiatd.conf`
 
 
@@ -70,6 +71,13 @@ Roger Fang <roger.fang@acx.io>
 ### How to start
 
 Fiat Rails Server
+
  `rails s`
+
 Fiat daemon
+
  `fiat_daemon`
+
+FiatCLI
+
+ `./fiatCLI`

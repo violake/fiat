@@ -1,4 +1,4 @@
-default: &default
+default_value: &default
   payment_type: ["bank"]
   log_level: DEBUG
   archive_limit: 7

@@ -31,7 +31,7 @@ module Fiat
       rescue Exception=>e
         return false, e.message
       ensure
-        Payment.timezone_reset
+        Payment.timezone_reset if Payment.timezone_changed?
       end
     end
 
@@ -45,8 +45,8 @@ module Fiat
     ##
     def importPaymentsFile(file, timezone)
       begin
-        raise "no source file" unless @file
-        csv_path = File.expand_path(@file, File.dirname(__FILE__))
+        raise "no source file" unless file
+        csv_path = File.expand_path(file)
         @csv_str = File.read(csv_path)
         Payment.set_timezone(timezone)
         read_csv
@@ -54,11 +54,12 @@ module Fiat
         check
         save
         send_to_acx
+        @result
       rescue Exception=>e
         puts e.message
-        puts e.backtrace.inspect
+        #puts e.backtrace.inspect
       ensure
-        Payment.timezone_reset
+        Payment.timezone_reset if Payment.timezone_changed?
       end
     end
 

@@ -27,7 +27,7 @@ class Fiatd
   #
   def initialize fiat_config
     @fiat_config = fiat_config
-    @logger = FiatdLogger.new(@fiat_config[:log_level])
+    @logger = FiatdLogger.new(@fiat_config[:fiat][:log_level])
     @fiat_server = FiatdServer.new(@logger)
     @conn = Bunny.new(@fiat_config[:rabbitmq]).tap {|conn| conn.start}
     @ch = @conn.create_channel

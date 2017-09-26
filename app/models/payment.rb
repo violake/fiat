@@ -11,9 +11,11 @@ class Payment < ApplicationRecord
   validates_presence_of :source_id, :source_name, :source_code, :payment_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
 
+  @@local = nil
+
   def self.set_timezone(timezone)
     regex = /^[+\-](0\d|1[0-2]):([0-5]\d)$/
-    return timestr unless regex.match(timezone)
+    return timezone unless regex.match(timezone)
     zone = timezone.split(":")
     @@local = Time.zone
     Time.zone = (zone[0] + "." + ((zone[1].to_f)/60*100).to_i.to_s).to_f.hours
@@ -21,6 +23,10 @@ class Payment < ApplicationRecord
 
   def self.timezone_reset
     Time.zone = @@local
+  end
+
+  def self.timezone_changed?
+    @@local ? true : false
   end
 
 
