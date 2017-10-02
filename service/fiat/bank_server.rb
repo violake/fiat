@@ -89,5 +89,15 @@ class BankServer
     response
   end
 
+  def resend
+    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < 4', Time.now.utc - @fiat_config[:resend_lag].minutes).inject(0) do |count, payment|
+      response = {"command": "reconcile", "payment": payment}
+      AMQPQueue.enqueue(response)
+      @logger.debug "resent :#{response}"
+      payment.send_times += 1
+      payment.save
+      count += 1
+    end
+  end
 
 end

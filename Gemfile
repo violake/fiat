@@ -22,6 +22,7 @@ gem 'hashie'
 gem 'codecal'
 gem 'will_paginate'
 gem 'tzinfo-data'
+gem 'redis-rails'
 
 
 group :development, :test do

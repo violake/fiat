@@ -10,6 +10,7 @@ require "action_mailer/railtie"
 require "action_view/railtie"
 require "action_cable/engine"
 require "csv"
+require "yaml"
 # require "sprockets/railtie"
 # require "rails/test_unit/railtie"
 
@@ -19,14 +20,24 @@ Bundler.require(*Rails.groups)
 
 module Fiat
   class Application < Rails::Application
+
+    filename = Rails.root.join('config', "application.yml")
+    if File.exist?(filename)
+      appconf = YAML.load_file(File.new(filename))
+      appconf[ENV['RAILS_ENV']].each do |key, value|
+        value = value.join "," if value.is_a? Array
+        ENV[key] = value
+      end
+    end
+
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 5.1
 
-    #config.cache_store = :redis_store, ENV['REDIS_URL']
-    #config.session_store :redis_store, :key => ENV['SESSION_KEY'], :expire_after => ENV['SESSION_EXPIRE'].to_i.minutes
+    config.cache_store = :redis_store, ENV['REDIS_URL']
+    config.session_store :redis_store, :key => ENV['SESSION_KEY'], :expire_after => ENV['SESSION_EXPIRE'].to_i.minutes
 
-    #config.middleware.use ActionDispatch::Cookies
-    #config.middleware.use config.session_store, config.session_options
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use config.session_store, config.session_options
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers

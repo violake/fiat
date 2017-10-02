@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   post '/payments', to: 'payments#import'
   post '/payments/archive', to:'payments#archive'
 
-  if Rails.env.development?
+  if Rails.env.development? || Rails.env.test?
     get '/fake_session', to:'application#fake_session'
   end
 end

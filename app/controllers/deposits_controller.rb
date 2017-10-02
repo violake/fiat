@@ -1,4 +1,5 @@
 class DepositsController < ApplicationController
+  before_action :auth_member!
   before_action :set_deposit, only: [:show]
   # GET /deposits
   def index

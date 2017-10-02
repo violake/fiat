@@ -120,6 +120,7 @@ module Fiat
         response = {"command": "reconcile", "payment": payment}
         AMQPQueue.enqueue(response)
         payment.status = :sent
+        payment.send_times += 1
         payment.save
         count += 1
       end

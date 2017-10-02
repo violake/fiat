@@ -77,6 +77,8 @@ Fiat Rails Server
 Fiat daemon
 
  `fiat_daemon`
+ 
+ `fiat_resend_daemon`
 
 FiatCLI
 

@@ -53,7 +53,7 @@ class Fiatd
   #
   # for future onboard more currencies
   # set @server to different fiat-server
-  # e.g. @server = Server.new(tokens[:type])
+  # e.g. @server = Server.new(tokens["payment_type"])
   def start
     #raise RemainAlmostDoneError if remain_doing?
     queue = @ch.queue(@fiat_config[:queue][:request][:name], :durable => true)
@@ -80,7 +80,7 @@ class Fiatd
 
         response.merge!(self.__send__(command, params))
         @logger.debug "#{response}"
-        if response[:log] 
+        if response[:log]
           @logger.info "*** Payment reconsile result: #{response} ***"
         else 
           AMQPQueue.enqueue(response) 

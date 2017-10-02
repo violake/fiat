@@ -4,6 +4,8 @@ default_value: &default
   archive_limit: 7
   search_day_diff: 3
   member_whitelist: ["1", "2"]
+  resend_frequence: 10
+  resend_lag: 60
 
 development:
   <<: *default
@@ -15,4 +17,7 @@ production:
   <<: *default
 
 fiat:
+  <<: *default
+
+bank:
   <<: *default

@@ -2,8 +2,8 @@ require_relative '../services/payment_import'
 require_relative '../../config/fiat_config'
 
 class PaymentsController < ApplicationController
+  before_action :auth_member!
   before_action :set_payment, only: [:show, :update]
-  #before_action :auth_member!
   CONFIG = Rails.application.config_for(:fiat)
   # POST /payments
   def import

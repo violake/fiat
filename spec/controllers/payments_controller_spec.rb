@@ -6,6 +6,10 @@ RSpec.describe PaymentsController, type: :controller do
   let!(:reconciled_payments) { create_list(:reconciled_payment, 7) }
   let!(:unreconciled_payments) { create_list(:unreconciled_payment, 5) }
 
+  before {
+    session[:member_id] = 2
+  }
+
   describe "get /payments paginate and filter test" do
     
     it "When no paginate or filter" do

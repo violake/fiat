@@ -5,6 +5,9 @@ RSpec.describe 'Deposits API', type: :request do
   let!(:deposits) { create_list(:deposit, 10) }
   let(:deposit_id) { deposits.first.id }
 
+  before {
+    get '/fake_session'
+  }
   # Test suite for GET /deposits
   describe 'GET /deposits' do
     # make HTTP get request before each example
