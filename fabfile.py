@@ -21,7 +21,7 @@ params = {
 
     ####### shared_files format:  [[ folder, [ shared file name list], type ], ... ] 
     ####### or left empty []
-    "shared_files"   :  [ ["config", ["database", "rabbitmq", "fiat", "secrets", "cable"], "yml"],],
+    "shared_files"   :  [ ["config", ["application","database", "rabbitmq", "fiat", "secrets", "cable"], "yml"],],
     "shared_path"    :  [ "vendor/bundle", "vendor/cache" ],
     "post_commands"  :  ["bundle install --with=production --without=\"development test\" --path=vendor/bundle"],
     
