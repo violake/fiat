@@ -1,3 +1,5 @@
+require_relative '../../app/models/payments/bank'
+
 FactoryGirl.define do
   factory :bank, :class => Fiat::Bank do |bank|
     bank.source_id { Faker::PhoneNumber.phone_number }

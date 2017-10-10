@@ -70,7 +70,7 @@ class BankServer
       payment = Payment.find(payment_id)
       deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
       if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
-        deposit.format(deposit_remote)
+        deposit.set_values(deposit_remote)
         deposit.save
         deposit = Deposit.find(deposit.id)
         payment.deposit(deposit, deposit_remote["error"])

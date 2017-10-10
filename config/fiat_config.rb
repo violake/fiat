@@ -7,7 +7,7 @@ class FiatConfig
   def data
     @@data ||= begin
       dir = File.dirname(__FILE__)
-      [:fiat, :database, :rabbitmq].reduce(Hashie::Mash.new) do |config, file|
+      [:fiat, :database, :rabbitmq, :fund_source].reduce(Hashie::Mash.new) do |config, file|
         config.merge(YAML.load_file(File.join(dir, "#{file}.yml")))
       end
     end

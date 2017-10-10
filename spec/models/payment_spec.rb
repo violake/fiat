@@ -10,6 +10,7 @@ RSpec.describe Payment, type: :model do
   it { should validate_presence_of(:amount) }
   it { should validate_presence_of(:currency) }
   it { should validate_uniqueness_of(:source_id).scoped_to(:source_code)  }
+  it { should validate_uniqueness_of(:txid) }
 
   describe "convert timezone for bank" do
     it "convert when no timezone(-) given" do
@@ -26,7 +27,7 @@ RSpec.describe Payment, type: :model do
                }
       Payment.set_timezone("-03:00")
       expect(Time.zone.utc_offset).to eq(-10800)
-      payment.format(params)
+      payment.set_values(params)
       expect(payment.created_at).to eq("2017-08-01 04:00:00 UTC")
       expect(payment.updated_at).to eq("2017-08-01 06:00:00 UTC")
       Payment.timezone_reset
@@ -47,7 +48,7 @@ RSpec.describe Payment, type: :model do
                }
       Payment.set_timezone("+03:00")
       expect(Time.zone.utc_offset).to eq(10800)
-      payment.format(params)
+      payment.set_values(params)
       expect(payment.created_at).to eq("2017-07-31 22:00:00 UTC")
       expect(payment.updated_at).to eq("2017-08-01 00:00:00 UTC")
       Payment.timezone_reset

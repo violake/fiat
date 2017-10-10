@@ -24,6 +24,7 @@ module Fiat
     filename = Rails.root.join('config', "application.yml")
     if File.exist?(filename)
       appconf = YAML.load_file(File.new(filename))
+      ENV['RAILS_ENV'] ||= YAML.load_file(File.new(Rails.root.join('config', "fiat.yml")))["fiat"]["rails_env"]
       appconf[ENV['RAILS_ENV']].each do |key, value|
         value = value.join "," if value.is_a? Array
         ENV[key] = value
