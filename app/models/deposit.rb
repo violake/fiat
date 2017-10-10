@@ -1,7 +1,7 @@
 class Deposit < ApplicationRecord
   validates_presence_of :account_id, :member_id, :currency, :lodged_amount, :aasm_state
 
-  def format(deposit_remote)
+  def set_values(deposit_remote)
     self.id ||= deposit_remote["deposit_id"]
     self.account_id = deposit_remote["account_id"]
     self.member_id = deposit_remote["member_id"]

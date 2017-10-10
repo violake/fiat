@@ -1,7 +1,7 @@
 module Fiat
 
   class Bank < Payment
-    def format(bank)
+    def set_values(bank)
       self.source_id ||= bank[:source_id]
       self.source_name = bank[:source_name]
       self.source_code = bank[:source_code]

@@ -10,6 +10,7 @@ class Payment < ApplicationRecord
 
   validates_presence_of :source_id, :source_name, :source_code, :payment_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
+  validates :txid, uniqueness: true, allow_nil: true
 
   @@local = nil
 
@@ -68,6 +69,7 @@ class Payment < ApplicationRecord
                     created_at
                     updated_at
                     description
+                    txid
                     sender_info
                     error_info
                     status

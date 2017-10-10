@@ -18,12 +18,11 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile read string
     ##
-    def importPayments(payments, timezone)
+    def importPayments(params)
       begin
-        @csv_str = payments.read
-        Payment.set_timezone(timezone)
-        read_csv
-        format_row
+        @csv_path = params[:payments].tempfile
+        Payment.set_timezone(params[:timezone])
+        readcsv
         check
         save
         send_to_acx
@@ -43,14 +42,12 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile -- read string
     ##
-    def importPaymentsFile(file, timezone)
+    def importPaymentsFile(file, params)
       begin
         raise "no source file" unless file
-        csv_path = File.expand_path(file)
-        @csv_str = File.read(csv_path)
-        Payment.set_timezone(timezone)
-        read_csv
-        format_row
+        @csv_path = File.expand_path(file)
+        Payment.set_timezone(params[:timezone])
+        readcsv
         check
         save
         send_to_acx
@@ -65,36 +62,18 @@ module Fiat
 
     private
 
-    ## read file.read to attribute @data_read
-    def read_csv
-      payments = @csv_str.split("\n")
-      @data_read = Array.new
-      payments.each do |line|
-        raise "Line format error: Please upload CSV files and wrap quotation mark for each column data" unless line[0] == "\"" && line[-1] == "\""
-        line = line[1..-2]
-        strip_line = []
-        line.split(/","/).each do |v|
-          raise "nil data from csv file,it could be error comma ending" unless v
-          strip_line.push(v.strip)
-        end
-        @data_read.push(strip_line)
-      end
-    end
-
-    #format csv with first line as column name for other lines into @payment array of hash
-    def format_row
-      @column_name = @data_read.shift.map! {|c| c = c.gsub(/\s+/, "").to_sym}
+    def readcsv
       @payments = []
-      @data_read.each_with_index do |row, index|
-        raise "payment line:[#{index+2}]error number of column : #{row.size} while number of column_name : #{@column_name.size}" unless @column_name.size == row.size
-        payment = {}
-        row.each_with_index do |column, i|
-          payment.merge!({@column_name[i]=>column})
-        end
-        @payments.push(payment)
+      CSV.foreach(@csv_path,
+        :quote_char=>'"',
+        :col_sep =>",", 
+        :headers => true, 
+        :header_converters => :symbol ) do |row|
+        @column_name ||= row.headers
+        @payments.push(row.to_h) 
       end
-
     end
+
 
     # save to payments table
     def save
@@ -104,7 +83,7 @@ module Fiat
         raise "payment type unknown ! \"#{payment[:payment_type]}\" " unless payclass
         pay = payclass.find_or_initialize_by(source_id: payment[:source_id], source_code: payment[:source_code])
         if(pay.valid_to_import?)
-          pay.format(payment)
+          pay.set_values(payment)
           pay.save
           @result[:imported] += 1
           @result[:error] += 1 if pay.result == :error
