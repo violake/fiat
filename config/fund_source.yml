@@ -1,0 +1,23 @@
+---
+fund_timestamp: 2017-10-12 19:41:41.401852100 +11:00
+usd:
+  bank_accounts:
+  - bank: Westpac
+    account_name: Peak International Pty Ltd
+    bsb: '034702'
+    account_number: 094844
+    honesty_point: 0
+aud:
+  bank_accounts:
+  - bank: Westpac
+    account_name: Peak International Pty Ltd
+    bsb: '033152'
+    account_number: '468666'
+    honesty_point: 1
+    acceptable_amount:
+      floor: 1000
+  - bank: Beyond Bank Australia
+    account_name: Peak International Pty Ltd
+    bsb: '805022'
+    account_number: 03651883
+    honesty_point: 0

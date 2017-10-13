@@ -1,5 +1,4 @@
-default_value: &default
-  source_type: ["bank", "westpac", "xeroapi"]
+fiat: &default
   payment_type: ["bank"]
   log_level: DEBUG
   archive_limit: 7
@@ -9,17 +8,8 @@ default_value: &default
   resend_lag: 60
   rails_env: "development"
 
-development:
-  <<: *default
-
-test:
-  <<: *default
-
-production:
-  <<: *default
-
-fiat:
-  <<: *default
-
 bank:
   <<: *default
+
+westpac:
+  bank_account_regex: \d{12}|\d{14}

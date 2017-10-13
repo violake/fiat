@@ -1,4 +1,5 @@
 class Payment < ApplicationRecord
+  has_paper_trail
 
   STATUS = [:new, :sent, :archived]
   RESULT = [:unreconciled, :reconciled, :error]

@@ -81,7 +81,7 @@ class Fiatd
         response.merge!(self.__send__(command, params))
         @logger.debug "#{response}"
         if response[:log]
-          @logger.info "*** Payment reconsile result: #{response} ***"
+          @logger.info "*** MQ execute result: #{response} ***"
         else 
           AMQPQueue.enqueue(response) 
         end
@@ -96,11 +96,6 @@ class Fiatd
         @ch.ack(delivery.delivery_tag)
       rescue ActiveRecord::RecordNotFound => e
         @logger.debug "response : #{e.inspect}"
-        @ch.ack(delivery.delivery_tag)
-      rescue NotEnoughUnspendError => e
-        @logger.warn "not enough unspent, wait for next round"
-        # not ack in ensure since we don't want to ack message when come
-        # across unknow exception
         @ch.ack(delivery.delivery_tag)
       rescue Exception => e
         @logger.error "Unhandle Error"
@@ -225,5 +220,19 @@ class Fiatd
     @server.autodeposit(params)
   end
 
+  #
+  #==== Synchronize bank accounts with ACX
+  #
+  # params : hash
+  #  {
+  #    "<currency>"=>[bank_accounts] : string   - currency name of fiat
+  #    bank_accounts                 : hash     - currency's bank accounts
+  #  }
+  #
+  # return : nil
+  #
+  def cmd_refreshbankaccounts(params)
+    @server.refreshbankaccounts(params)
+  end
 
 end

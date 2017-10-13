@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require_relative './config/environment'
 require_relative './config/fiat_config.rb'
 require_relative './service/fiatd'
 

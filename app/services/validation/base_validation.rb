@@ -2,11 +2,17 @@ module Fiat
   class BaseValidation
     def self.validate(payment)
       @error = ""
-      [:source_id, :source_code, :amount, :currency, :source_name].each do | column |
-        @error += "missing #{column.to_s}\n" if payment[column] == nil || payment[column] == ""
-      end
-
       return @error.size == 0 ? true : false, @error
     end
+
+    def self.datetime_valid(date)
+      begin
+        Time.zone.parse(date)
+        return ""
+      rescue Exception=>e
+        return "[error date] " + date
+      end
+    end
+
   end
 end

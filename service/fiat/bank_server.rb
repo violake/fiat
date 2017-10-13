@@ -100,4 +100,34 @@ class BankServer
     end
   end
 
+  def sync_bank_accounts
+    response = {"command"=>"syncbankaccounts", "key"=>"bank"}
+    AMQPQueue.enqueue(response)
+    @logger.info "*** bank_server send sync bank accounts ***"
+  end
+
+  def refreshbankaccounts(params)
+    hash = YAML.load_file("./config/fund_source.yml")
+
+    params.each do |currency, accounts|
+      if hash && hash.has_key?(currency)
+        hash[currency] ||= {}
+        hash[currency]["bank_accounts"] ||= []
+        accounts.each do |account|
+          hash[currency]["bank_accounts"].push(account) if ! hash[currency]["bank_accounts"].include?(account)
+        end
+      else
+        hash ||= {}
+        hash[currency] ||= {}
+        hash[currency]["bank_accounts"] ||= []
+        accounts.each {|account| hash[currency]["bank_accounts"].push(account) }
+      end
+    end
+
+    hash["fund_timestamp"] = Time.now
+
+    File.write("./config/fund_source.yml", hash.to_yaml)
+    return response = {log: true, result: "bank accounts refreshed"}
+  end
+
 end

@@ -42,7 +42,14 @@ rspec
 
   * `rake init:fiat_queues`
   * Database configuration
-  * `rake db:create db:migrate`
+
+```
+  rake db:create 
+  rails generate paper_trail:install
+  rake db:migrate
+
+```
+
   * Config folder: ./config/. config files: application.yml, database.yml, fiat.yml, rabbitmq.yml 
   *               in database.yml, modify "fiatd: database:" the same as production when it's deployed to production server
 

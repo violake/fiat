@@ -42,7 +42,11 @@ class FiatdResender
     while @resending
       begin
         @busy = !@busy
-        #sleep(@fiat_config[:fiat][:resend_frequence].minutes)
+        if !@fiat_config[:fund_timestamp] || Time.now - @fiat_config[:fund_timestamp] > 1.days
+          @fiat_server.bank.sync_bank_accounts
+        end
+
+        sleep(@fiat_config[:fiat][:resend_frequence].minutes)
         @fiat_config[:fiat][:payment_type].each do |fiat|
           @resend_server ||= @fiat_server.send(fiat)
           count = @resend_server.resend
@@ -54,7 +58,6 @@ class FiatdResender
       ensure
         @busy = !@busy if @busy
       end
-      sleep 2
     end
   end
 
