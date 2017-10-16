@@ -11,7 +11,9 @@ module Fiat
 
     ## import payments called by payment_controller
     #  [params]
-    #    payments : Tempfile
+    #    payments    : Tempfile
+    #    bank_account: String     -- json string format bank account detail
+    #    source_type : String     -- different converter
     #  [return]
     #    status -- true/false if imported successfully or not
     #    result -- a hash : {imported: 0, ignored: 0, error: 0} when status true; error messages when status false
@@ -21,6 +23,8 @@ module Fiat
     def importPayments(params)
       begin
         @csv_path = params[:payments].tempfile
+        @source_type = params[:source_type]
+        @currency = params[:currency]
         Payment.set_timezone(params[:timezone])
         readcsv
         check
@@ -46,6 +50,8 @@ module Fiat
       begin
         raise "no source file" unless file
         @csv_path = File.expand_path(file)
+        @source_type = params[:source_type]
+        @currency = params[:currency]
         Payment.set_timezone(params[:timezone])
         readcsv
         check
@@ -60,6 +66,15 @@ module Fiat
       end
     end
 
+
+    def force_reconcile(payment)
+      response = {"command": "force_reconcile", "payment": payment}
+      AMQPQueue.enqueue(response)
+      payment.status = :sent
+      payment.send_times += 1
+      payment.save
+    end
+
     private
 
     def readcsv
@@ -69,28 +84,18 @@ module Fiat
         :col_sep =>",", 
         :headers => true, 
         :header_converters => :symbol ) do |row|
-        @column_name ||= row.headers
-        @payments.push(row.to_h) 
+        @column_names ||= row.headers
+        add_hash = {source_type: @source_type}
+        add_hash.merge!(currency: @currency) unless row.to_h.has_key?(:currency)
+        @payments.push(row.to_h.merge!(add_hash) )
       end
     end
 
-
     # save to payments table
     def save
-      @result = {imported: 0, ignored: 0, error: 0}
-      @payments.each do |payment|
-        payclass = Fiat.const_get(payment[:payment_type])
-        raise "payment type unknown ! \"#{payment[:payment_type]}\" " unless payclass
-        pay = payclass.find_or_initialize_by(source_id: payment[:source_id], source_code: payment[:source_code])
-        if(pay.valid_to_import?)
-          pay.set_values(payment)
-          pay.save
-          @result[:imported] += 1
-          @result[:error] += 1 if pay.result == :error
-        else
-          @result[:ignored] += 1
-        end
-      end
+      payclass = Fiat.const_get(@source_type.capitalize)
+      raise "payment type unknown ! '#{payment[:payment_type]}' " unless payclass
+      @result = payclass.import(@payments)
     end
 
     # send payment with customer_code to rabbitmq server

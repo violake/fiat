@@ -1,3 +1,5 @@
+require './config/fiat_config'
+
 class ApplicationController < ActionController::API
   include Response
   include ExceptionHandler
@@ -6,7 +8,7 @@ class ApplicationController < ActionController::API
   end
 
   def auth_member!
-    unless current_user_id && Rails.application.config_for(:fiat)["member_whitelist"].include?(current_user_id.to_s)
+    unless current_user_id && FiatConfig.new[:fiat]["member_whitelist"].include?(current_user_id.to_s)
       json_response({}, 401)
     end
   end

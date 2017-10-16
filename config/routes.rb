@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   put '/payments/:id', to: 'payments#update'
   post '/payments', to: 'payments#import'
   post '/payments/archive', to:'payments#archive'
+  post '/payments/:id/reconcile', to: 'payments#force_reconcile'
 
   if Rails.env.development? || Rails.env.test?
     get '/fake_session', to:'application#fake_session'

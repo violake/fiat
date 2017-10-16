@@ -1,9 +1,10 @@
 require_relative '../services/payment_import'
 require_relative '../../config/fiat_config'
+require_relative '../services/validation'
 
 class PaymentsController < ApplicationController
   before_action :auth_member!
-  before_action :set_payment, only: [:show, :update]
+  before_action :set_payment, only: [:show, :update, :force_reconcile]
   CONFIG = Rails.application.config_for(:fiat)
   # POST /payments
   def import
@@ -12,11 +13,16 @@ class PaymentsController < ApplicationController
       json_response( { payments: ['no file uploaded']} , 400)
     elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
       json_response( { timezone: ["no timezone or error format eg: '+03:00' "]} , 400)
+    #elsif !params[:bank_account] || ! bank_accounts_include?(params[:bank_account])
+    #  json_response( { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]} , 400)
+    elsif !params[:source_type] || ! source_types_include?(params[:source_type])
+      json_response( { source_type: ["source type undefined : '#{params[:source_type]}' "]} , 400)
     else
-      success, result = Fiat::PaymentImport.new.importPayments(uploaded_io.tempfile, params[:timezone])
+      success, result = Fiat::PaymentImport.new.importPayments(params)
       json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400) 
     end
   end
+
 
   # GET /payments
   def index
@@ -55,6 +61,10 @@ class PaymentsController < ApplicationController
   def update
     @payment.update(payment_params)
     head :no_content
+  end
+
+  def force_reconcile
+    Fiat::PaymentImport.new.force_reconcile(@payment)
   end
 
   private
@@ -101,6 +111,26 @@ class PaymentsController < ApplicationController
       return {}
     rescue ArgumentError=> e
       {name.to_sym => ["#{name} should be date time: #{time}"]}
+    end
+  end
+
+  def source_types_include?(source_type)
+    Fiat::FUND_TYPE.include?(source_type)
+  end
+
+  def bank_accounts_include?(bank_account)
+    @@bank_accounts ||= FiatConfig.new[:bank_accounts]
+    @@bank_accounts.inject(false) do |match, b|
+      return match if match
+      bank_account.keys.each do |key|
+        if bank_account[key] == b[key]
+          match = true
+        else
+          match = false
+          break
+        end
+      end
+      match
     end
   end
 
