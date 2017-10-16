@@ -30,13 +30,14 @@ module Fiat
     # :debit_amount=>nil, :credit_amount=>"5000.00", :categories=>"DEP", :serial=>nil}
     def self.convert(westpac)
       bank = {}
-      bank[:source_id] = [westpac[:bank_account], 
-                          westpac[:date],
-                          westpac[:credit_amount], 
-                          westpac[:categories], 
-                          westpac[:serial], 
-                          westpac[:currency], 
-                          westpac[:source_type]].inject(""){|s, k| s+=k if k; s}.hash
+      bank[:source_id] = self.jhash([westpac[:bank_account], 
+                                     westpac[:date],
+                                     westpac[:credit_amount], 
+                                     westpac[:narrative],
+                                     westpac[:categories], 
+                                     westpac[:serial], 
+                                     westpac[:currency], 
+                                     westpac[:source_type]].inject(""){|s, k| s+=k if k; s})
       bank[:source_name] = "Wespac statement"
       bank[:source_code] = {bsb: westpac[:bank_account][0..5], account_number: westpac[:bank_account][6..-1], bank: "Westpac"}.to_json
       bank[:country] = "Australia"
@@ -48,5 +49,19 @@ module Fiat
       bank[:source_type] = "westpac"
       return bank
     end
+
+    private
+    def self.jhash(str)
+      result = 0
+      mul = 1
+      max_mod = 2**63 - 1
+      str.chars.reverse_each do |c|
+          result += mul * c.ord
+          result %= max_mod
+          mul *= 31
+      end
+      result
+    end
+
   end
 end

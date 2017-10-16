@@ -86,7 +86,7 @@ module Fiat
         :header_converters => :symbol ) do |row|
         @column_names ||= row.headers
         add_hash = {source_type: @source_type}
-        add_hash.merge!(currency: @currency) unless row.to_h.has_key?(:currency)
+        add_hash.merge!(currency: @currency) if !row.to_h.has_key?(:currency) && @currency
         @payments.push(row.to_h.merge!(add_hash) )
       end
     end

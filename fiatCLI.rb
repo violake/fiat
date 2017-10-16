@@ -24,6 +24,8 @@ class FiatCLI < Thor
       params = options.inject({}) {|hash, (k,v)| hash.merge!({k.to_sym=>v})}
       params[:timezone] ||= "+08:00"
       params[:bank_account] ||= "1204938740218302"
+      params[:source_type] ||= "westpac"
+      params[:currency] ||= "aud"
       puts Fiat::PaymentImport.new.importPaymentsFile(file, params)
     rescue Exception=>e
       puts e.message

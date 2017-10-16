@@ -31,7 +31,6 @@ class Payment < ApplicationRecord
     @@local ? true : false
   end
 
-
   def deposit(deposit, error)
     self.deposit_id = deposit.id
     self.result = "reconciled" if deposit.aasm_state == "accepted"

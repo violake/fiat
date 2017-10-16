@@ -17,6 +17,7 @@ module Fiat
       valid, errormsg = super
       return valid, errormsg unless valid
       error = ""
+      error = "currency not set" unless payment[:currency]
       error += "bank account not valid: '#{payment[:bank_account]}'" unless %r[#{FiatConfig.new[:westpac][:bank_account_regex]}].match(payment[:bank_account])
       error += datetime_valid(payment[:date])
       return error.size == 0, error
