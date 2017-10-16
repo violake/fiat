@@ -13,3 +13,4 @@ bank:
 
 westpac:
   bank_account_regex: \d{12}|\d{14}
+  import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]

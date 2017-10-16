@@ -8,7 +8,7 @@ module Fiat
 
     def self.filter(payments)
       payments.inject([]) do |filtered_payments, payment|
-        filtered_payments.push(payment) if payment[:credit_amount].to_i > 0
+        filtered_payments.push(payment) if payment[:credit_amount].to_i > 0 && FiatConfig.new[:westpac][:import_filter_categories].include?(payment[:categories])
         filtered_payments
       end
     end

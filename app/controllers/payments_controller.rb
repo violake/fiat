@@ -67,6 +67,10 @@ class PaymentsController < ApplicationController
     Fiat::PaymentImport.new.force_reconcile(@payment)
   end
 
+  def daily_sum
+    Payment.get_daily_sum()
+  end
+
   private
 
   def search_payments
