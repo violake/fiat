@@ -34,11 +34,12 @@ class FiatCLI < Thor
   end 
 
   
-  desc "dailyAmount *params", "show daily amount summary."
+  desc "dailyAmount currency, *params", "show daily amount summary."
   long_desc <<-LONGDESC
     Check account daily payment summary
 
     description:\n
+    currency: short name of currency. eg: aud\n
     params:
     You can optionally specify params.\n
       single date: 20170909  
@@ -47,11 +48,11 @@ class FiatCLI < Thor
     bank account: 12/14 digits\n
 
     Examples:\n
-    > $ fiatCLI.rb dailyAmount 20170917\n
-    > $ fiatCLI.rb dailyAmount 20170917 20170918\n
-    > $ fiatCLI.rb dailyAmount 20170917 20170918 033152468666
+    > $ fiatCLI.rb dailyAmount aud 20170917\n
+    > $ fiatCLI.rb dailyAmount aud 20170917 20170918\n
+    > $ fiatCLI.rb dailyAmount aud 20170917 20170918 033152468666
   LONGDESC
-  def dailyAmount(*params)
+  def dailyAmount(currency, *params)
     #raise "bank account invalid" unless %r[#{FiatConfig.new[:westpac][:bank_account_regex]}].match(bank_account)
     if params.size == 1
       start_date, end_date = params[0], params[0]
@@ -59,8 +60,11 @@ class FiatCLI < Thor
       start_date, end_date = params[0], params[1]
       bank_account = params[2] ? params[2] : nil
     end
+    start_date = DateTime.parse(start_date).strftime("%Y%m%d")
+    end_date = DateTime.parse(end_date).strftime("%Y%m%d")
+    raise "currency not found: '#{currency}'" unless FiatConfig.new[:fiat_accounts].has_key? currency
     raise "bank account invalid" if bank_account && ! (%r[#{FiatConfig.new[:westpac][:bank_account_regex]}].match(bank_account) )
-    Payment.get_daily_sum(start_date, end_date, bank_account).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
+    Payment.get_daily_sum(start_date, end_date, currency, bank_account).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
   end
   
 end

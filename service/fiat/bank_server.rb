@@ -110,17 +110,18 @@ class BankServer
     hash = YAML.load_file("./config/fund_source.yml")
 
     params.each do |currency, accounts|
-      if hash && hash.has_key?(currency)
-        hash[currency] ||= {}
-        hash[currency]["bank_accounts"] ||= []
+      if hash && hash["fiat_accounts"] && hash["fiat_accounts"].has_key?(currency)
+        hash["fiat_accounts"][currency] ||= {}
+        hash["fiat_accounts"][currency]["bank_accounts"] ||= []
         accounts.each do |account|
-          hash[currency]["bank_accounts"].push(account) if ! hash[currency]["bank_accounts"].include?(account)
+          hash["fiat_accounts"][currency]["bank_accounts"].push(account) if ! hash["fiat_accounts"][currency]["bank_accounts"].include?(account)
         end
       else
         hash ||= {}
-        hash[currency] ||= {}
-        hash[currency]["bank_accounts"] ||= []
-        accounts.each {|account| hash[currency]["bank_accounts"].push(account) }
+        hash["fiat_accounts"] ||= {}
+        hash["fiat_accounts"][currency] ||= {}
+        hash["fiat_accounts"][currency]["bank_accounts"] ||= []
+        accounts.each {|account| hash["fiat_accounts"][currency]["bank_accounts"].push(account) }
       end
     end
 
