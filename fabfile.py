@@ -6,6 +6,7 @@ env.use_ssh_config = True
 
 params = {
     "username"       : "app",
+    "theme"          : "acx",
     "projectname"    : "fiat",
     "ruby_version"   : "2.4.0",
     "nodejs_version" : "8.x",
@@ -59,13 +60,13 @@ def init_sys():
     '''system initialization'''
     env.user = "ubuntu"
     update_system()
-    setup_firewall()
-    install_amqp_tools()
-    install_supervisor()
-    install_mariadb_dev(params) 
-    install_nginx(params)
-    install_parity()
-    install_nodejs(params)
+    #setup_firewall()
+    #install_amqp_tools()
+    #install_supervisor()
+    #install_mariadb_dev(params) 
+    #install_nginx(params)
+    #install_parity()
+    #install_nodejs(params)
     add_user(params["username"])
 
 @task
@@ -77,11 +78,18 @@ def install_deps():
     create_config_files(params)
 
 @task
-def deploy():
+def deploy(theme="notheme"):
     '''deploy source code'''
     env.user = params["username"]
-    params["config_symlinks"].update(params["path_symlinks"])
-    deploy_src(params)
+    if not theme=="notheme":
+        params["theme"] = theme
+        tmp_params = update_params(params)
+        tmp_params["config_symlinks"].update(tmp_params["path_symlinks"])
+        deploy_src(tmp_params)
+    else:
+        params["config_symlinks"].update(params["path_symlinks"])
+        deploy_src(params)
+
 
 
 @task
