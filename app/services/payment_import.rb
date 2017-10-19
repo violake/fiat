@@ -89,6 +89,7 @@ module Fiat
         add_hash.merge!(currency: @currency) if !row.to_h.has_key?(:currency) && @currency
         @payments.push(row.to_h.merge!(add_hash) )
       end
+      @read_size = @payments.size
     end
 
     # save to payments table
@@ -96,6 +97,7 @@ module Fiat
       payclass = Fiat.const_get(@source_type.capitalize)
       raise "payment type unknown ! '#{payment[:payment_type]}' " unless payclass
       @result = payclass.import(@payments)
+      @result[:filtered] = @read_size - @payments.size
     end
 
     # send payment with customer_code to rabbitmq server

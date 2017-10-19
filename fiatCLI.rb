@@ -12,21 +12,23 @@ class FiatCLI < Thor
   #
   def initialize(args = [], local_options = {}, config = {})
     super(args, local_options, config)
+    @fiat_config = FiatConfig.new
   end
 
-  desc "importCSV csv_file_name --timezone '+08:00' --source_type 'westpac' --currency 'aud'", "check payments csv file data and import into database then sending to ACX via MQ"
+  desc "importCSV csv_file_name", "check payments csv file data and import into database then sending to ACX via MQ"
   method_option :timezone, aliases: '-t', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
-  method_option :account, aliases: '-a', type: :string, desc: "please give the account if csv doesn't have, eg: '033152468666'"
-  method_option :currency, aliases: '-c', type: :string, desc: "please give the currency if csv doesn't have, eg: 'aud'"
+  method_option :bank_account, aliases: '-a', type: :string, required: true, desc: "please give the bank account if csv doesn't have, eg: '033152-468666'"
   def importCSV(file)
     begin
-      #raise "--timezone format error: '#{options[:timezone]}'. eg: [+08:00] " if  ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone]) )
-      #raise "--invalid bank account: '#{options[:bank_account]}' " if !options[:bank_account] && ! Fiat::FUND_TYPE.include?(options[:bank_account])
+      raise "timezone format error: '#{options[:timezone]}'. eg: [+08:00] " unless /^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone])
+      raise "bank account error: '#{options[:bank_account]}' " if !options[:bank_account] || !( /\d{6}-\d{6,8}/.match(options[:bank_account]) )
       params = options.inject({}) {|hash, (k,v)| hash.merge!({k.to_sym=>v})}
-      params[:timezone] ||= "+08:00"
-      params[:bank_account] ||= "1204938740218302"
-      params[:source_type] ||= "westpac"
-      params[:currency] ||= "aud"
+      params[:timezone] ||= "+11:00"
+      params[:bank_account] ||= "033152-468666" 
+      bank_account = get_bank_account_detail(params[:bank_account], params)
+      raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
+      params[:bank_account] = bank_account
+      params[:source_type] = bank_account["bank"].delete(' ').downcase
       puts Fiat::PaymentImport.new.importPaymentsFile(file, params)
     rescue Exception=>e
       puts e.message
@@ -45,15 +47,15 @@ class FiatCLI < Thor
       single date: 20170909  
     or:\n
       from to date: 20170908 20170910\n
-    bank account: 12/14 digits\n
+    bank account: bsb-account_number 033152-468666\n
+      
 
     Examples:\n
     > $ fiatCLI.rb dailyAmount aud 20170917\n
     > $ fiatCLI.rb dailyAmount aud 20170917 20170918\n
-    > $ fiatCLI.rb dailyAmount aud 20170917 20170918 033152468666
+    > $ fiatCLI.rb dailyAmount aud 20170917 20170918 033152-468666
   LONGDESC
   def dailyAmount(currency, *params)
-    #raise "bank account invalid" unless %r[#{FiatConfig.new[:westpac][:bank_account_regex]}].match(bank_account)
     if params.size == 1
       start_date, end_date = params[0], params[0]
     else
@@ -62,11 +64,27 @@ class FiatCLI < Thor
     end
     start_date = DateTime.parse(start_date).strftime("%Y%m%d")
     end_date = DateTime.parse(end_date).strftime("%Y%m%d")
-    raise "currency not found: '#{currency}'" unless FiatConfig.new[:fiat_accounts].has_key? currency
-    raise "bank account invalid" if bank_account && ! (%r[#{FiatConfig.new[:westpac][:bank_account_regex]}].match(bank_account) )
-    Payment.get_daily_sum(start_date, end_date, currency, bank_account).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
+    raise "currency not found: '#{currency}'" unless @fiat_config[:fiat_accounts].has_key? currency
+    raise "bank account error '#{bank_account}'" if bank_account && ! (/\d{6}-\d{6,8}/.match(bank_account) )
+    raise "invalid bank account: '#{bank_account}' " if bank_account && !get_bank_account_detail(bank_account)
+    Payment.get_daily_sum(start_date, end_date, currency, bank_account.delete('-')).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
   end
   
+  private
+  def get_bank_account_detail(bank_account, params=nil)
+    b_account = nil
+    @fiat_config[:fiat_accounts].to_hash.each do |currency, accounts|
+      accounts.each { |k, v| break if b_account ;v.each do |account|
+        if account["bsb"] == bank_account.split("-")[0] && account["account_number"] == bank_account.split("-")[1]
+          b_account = account 
+          params[:currency] ||= currency if params
+          break
+        end
+      end }
+    end
+    b_account
+  end
+
 end
 
 FiatCLI.start(ARGV)

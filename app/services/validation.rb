@@ -29,6 +29,7 @@ module Fiat
 
       #filter data if needed
       @payments = validateclass.filter(@payments) if validateclass.respond_to?("filter")
+      raise @payments if @payments.is_a? String
 
       @payments.each_with_index do |payment,index|
         valid, errormsg = validateclass.validate(payment)

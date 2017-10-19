@@ -30,16 +30,9 @@ module Fiat
     # :debit_amount=>nil, :credit_amount=>"5000.00", :categories=>"DEP", :serial=>nil}
     def self.convert(westpac)
       bank = {}
-      bank[:source_id] = self.jhash([westpac[:bank_account], 
-                                     westpac[:date],
-                                     westpac[:credit_amount], 
-                                     westpac[:narrative],
-                                     westpac[:categories], 
-                                     westpac[:serial], 
-                                     westpac[:currency], 
-                                     westpac[:source_type]].inject(""){|s, k| s+=k if k; s})
+      bank[:source_id] = self.generate_id(westpac)
       bank[:source_name] = "Wespac statement"
-      bank[:source_code] = {bsb: westpac[:bank_account][0..5], account_number: westpac[:bank_account][6..-1], bank: "Westpac"}.to_json
+      bank[:source_code] = westpac[:bank_account]
       bank[:country] = "Australia"
       bank[:payment_type] = "Bank"
       bank[:amount] = westpac[:credit_amount]
@@ -50,7 +43,34 @@ module Fiat
       return bank
     end
 
+    def self.get_sum_by_ids(westpacs)
+      daily_ids = []
+      daily_sum = westpacs.inject(0) do |sum, westpac|
+        westpac = self.find_by(source_id: self.generate_id(westpac))
+        if westpac && !daily_ids.include?(westpac.source_id)
+          daily_ids.push(westpac.source_id)
+          sum += westpac.amount
+        else
+          sum
+        end
+      end
+      {daily_sum: daily_sum, daily_ids: daily_ids}
+    end
+
+    def self.generate_id(westpac)
+      bank_account = westpac[:bank_account].is_a?(String) ? westpac[:bank_account] : westpac[:bank_account]["bsb"] + westpac[:bank_account]["account_number"]
+      self.jhash([bank_account, 
+                  westpac[:date],
+                  westpac[:credit_amount], 
+                  westpac[:narrative],
+                  westpac[:categories], 
+                  westpac[:serial], 
+                  westpac[:currency], 
+                  westpac[:source_type]].inject(""){|s, k| s+=k if k; s})
+    end
+
     private
+
     def self.jhash(str)
       result = 0
       mul = 1
