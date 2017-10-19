@@ -25,6 +25,7 @@ module Fiat
         @csv_path = params[:payments].tempfile
         @source_type = params[:source_type]
         @currency = params[:currency]
+        @bank_account = params[:bank_account]
         Payment.set_timezone(params[:timezone])
         readcsv
         check
@@ -52,6 +53,7 @@ module Fiat
         @csv_path = File.expand_path(file)
         @source_type = params[:source_type]
         @currency = params[:currency]
+        @bank_account = params[:bank_account]
         Payment.set_timezone(params[:timezone])
         readcsv
         check
@@ -87,6 +89,7 @@ module Fiat
         @column_names ||= row.headers
         add_hash = {source_type: @source_type}
         add_hash.merge!(currency: @currency) if !row.to_h.has_key?(:currency) && @currency
+        add_hash.merge!(bank_account: @bank_account["bsb"] + @bank_account["account_number"]) if !row.to_h.has_key?(:currency) && @bank_account
         @payments.push(row.to_h.merge!(add_hash) )
       end
       @read_size = @payments.size

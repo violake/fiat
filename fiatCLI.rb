@@ -23,12 +23,12 @@ class FiatCLI < Thor
       raise "timezone format error: '#{options[:timezone]}'. eg: [+08:00] " unless /^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone])
       raise "bank account error: '#{options[:bank_account]}' " if !options[:bank_account] || !( /\d{6}-\d{6,8}/.match(options[:bank_account]) )
       params = options.inject({}) {|hash, (k,v)| hash.merge!({k.to_sym=>v})}
-      params[:timezone] ||= "+11:00"
-      params[:bank_account] ||= "033152-468666" 
+      #params[:timezone] ||= "+11:00"
+      #params[:bank_account] ||= "805022-03651883" 
       bank_account = get_bank_account_detail(params[:bank_account], params)
       raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
       params[:bank_account] = bank_account
-      params[:source_type] = bank_account["bank"].delete(' ').downcase
+      params[:source_type] = bank_account["bank"].split(' ').shift.downcase
       puts Fiat::PaymentImport.new.importPaymentsFile(file, params)
     rescue Exception=>e
       puts e.message

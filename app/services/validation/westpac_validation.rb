@@ -40,19 +40,6 @@ module Fiat
       return error.size == 0, error
     end
 
-    private 
-
-    def self.private_attrs
-      ["honesty_point", "acceptable_amount"]
-    end
-
-    def self.filter_white_list(payments)
-      payments.inject([]) do |filtered_payments, payment|
-        filtered_payments.push(payment) if payment[:credit_amount].to_i > 0 && FiatConfig.new[:westpac][:import_filter_categories].include?(payment[:categories])
-        filtered_payments
-      end
-    end
-
     def self.validate_by_sum(payments)
       # sort by date
       payments.sort_by!{|k| Time.parse(k[:date])}
@@ -108,6 +95,19 @@ module Fiat
         end
       end
       payments
+    end
+
+    private 
+
+    def self.private_attrs
+      ["honesty_point", "acceptable_amount"]
+    end
+
+    def self.filter_white_list(payments)
+      payments.inject([]) do |filtered_payments, payment|
+        filtered_payments.push(payment) if payment[:credit_amount].to_i > 0 && FiatConfig.new[:westpac][:import_filter_categories].include?(payment[:categories])
+        filtered_payments
+      end
     end
 
   end
