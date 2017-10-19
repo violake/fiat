@@ -32,7 +32,7 @@ module Fiat
       bank = {}
       bank[:source_id] = self.generate_id(westpac)
       bank[:source_name] = "Wespac statement"
-      bank[:source_code] = westpac[:bank_account]
+      bank[:source_code] = westpac[:bank_account].to_json
       bank[:country] = "Australia"
       bank[:payment_type] = "Bank"
       bank[:amount] = westpac[:credit_amount]
