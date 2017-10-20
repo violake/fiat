@@ -41,12 +41,12 @@ class FiatdResender
   def resend
     while @resending
       begin
+        puts @resending
         @busy = !@busy
         if !@fiat_config[:fund_timestamp] || Time.now - @fiat_config[:fund_timestamp] > 1.days
           @fiat_server.bank.sync_bank_accounts
         end
 
-        sleep(@fiat_config[:fiat][:resend_frequence].minutes)
         @fiat_config[:fiat][:payment_type].each do |fiat|
           @resend_server ||= @fiat_server.send(fiat)
           count = @resend_server.resend
@@ -58,6 +58,7 @@ class FiatdResender
       ensure
         @busy = !@busy if @busy
       end
+      sleep_break( @fiat_config[:fiat][:resend_frequence] * 60 )
     end
   end
 
@@ -79,5 +80,15 @@ class FiatdResender
   def resume_resend
     @resending = true
   end
+
+  private
+  
+    def sleep_break( seconds ) # breaks after n seconds or after interrupt
+      while (seconds > 0)
+        sleep(1)
+        seconds -= 1
+        break unless @resending
+      end
+    end
 
 end

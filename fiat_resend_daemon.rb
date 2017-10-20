@@ -23,7 +23,7 @@ clean_terminate = proc do
 end
 
 Signal.trap("TERM",  &clean_terminate)
-Signal.trap("INT", &clean_terminate)
+Signal.trap("INT", &terminate)
 
 logger.info("FiatdResender daemon start !")
 begin
