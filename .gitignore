@@ -18,3 +18,10 @@
 !/tmp/.keep
 
 .byebug_history
+.rspec
+/.vscode
+/release
+test.rb
+payments_testdata.csv
+PEAK INTERNATIONAL WESTPAC STATEMENT.csv
+Beyond Banking statement.csv
