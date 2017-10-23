@@ -17,6 +17,7 @@ gem 'will_paginate'
 gem 'tzinfo-data'
 gem 'redis-rails'
 gem 'paper_trail'
+gem "rufus-scheduler"
 
 
 group :development, :test do

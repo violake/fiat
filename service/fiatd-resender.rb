@@ -35,30 +35,39 @@ class FiatdResender
     @resending = true
   end
 
+  def frequence
+    @fiat_config[:fiat][:resend_frequence]
+  end
+
+  def sync_bank_accounts
+    if !@fiat_config[:fund_timestamp] || Time.now - @fiat_config[:fund_timestamp] > 1.days
+      @fiat_server.bank.sync_bank_accounts
+    end
+  end
+
   #
   #==== resending payments that haven't got reply messages
   # 
   def resend
-    while @resending
+    if @resending && !@busy
       begin
-        puts @resending
         @busy = !@busy
-        if !@fiat_config[:fund_timestamp] || Time.now - @fiat_config[:fund_timestamp] > 1.days
-          @fiat_server.bank.sync_bank_accounts
-        end
-
         @fiat_config[:fiat][:payment_type].each do |fiat|
           @resend_server ||= @fiat_server.send(fiat)
           count = @resend_server.resend
           @logger.info "*** #{fiat} resend #{count} payments ***"
         end
-        
+        @busy_count = 0
       rescue Exception => e
         puts e.message
       ensure
         @busy = !@busy if @busy
       end
-      sleep_break( @fiat_config[:fiat][:resend_frequence] * 60 )
+    elsif @resending && @busy
+      @busy_count ||= 0
+      @logger.info "*** #Last resending job is still processing ***"
+      @busy_count += 1
+      $logger.error "[Fiat Resend] job processing for too long time: over '#{@busy_count}' times" if @busy_count > 10
     end
   end
 
@@ -80,15 +89,5 @@ class FiatdResender
   def resume_resend
     @resending = true
   end
-
-  private
-  
-    def sleep_break( seconds ) # breaks after n seconds or after interrupt
-      while (seconds > 0)
-        sleep(1)
-        seconds -= 1
-        break unless @resending
-      end
-    end
 
 end
