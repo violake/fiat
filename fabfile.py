@@ -6,26 +6,27 @@ env.use_ssh_config = True
 
 params = {
     "username"       : "app",
-    "theme"          : "acx",
+    "theme"          : "notheme",
     "projectname"    : "fiat",
     "ruby_version"   : "2.4.0",
-    "nodejs_version" : "8.x",
-
-    "mariadb_type"   : "client",  #mariadb types:  "client", "server"
-    "mariadb_version": "10.1",
     
     "tar_strip_components" : 1,
     "number_of_releases"   : 10,   #number of releases kept in releases folder
     "roll_back_switch"     : True,
 
-    "nginx_makefile"  : "makefile_for_nginx",
-
+    "mariadb_type"   : "client",  #mariadb types:  "client", "server"
+    "mariadb_version": "10.1",
+    #"nodejs_version" : "8.x",
     ####### shared_files format:  [[ folder, [ shared file name list], type ], ... ] 
     ####### or left empty []
-    "shared_files"   :  [ ["config", ["application","database", "rabbitmq", "fiat", "secrets", "cable"], "yml"],],
+    "shared_files"   :  [ ["config", ["application","database", "rabbitmq", "fiat", "secrets", "cable", "fund_source"], "yml"],],
     "shared_path"    :  [ "vendor/bundle", "vendor/cache" ],
-    "post_commands"  :  ["bundle install --with=production --without=\"development test\" --path=vendor/bundle"],
-    
+    "post_commands"  :  ["bundle install --with=production --without=\"development test\" --path=vendor/bundle",
+                        "mkdir -p tmp",
+                        "touch tmp/restart.txt"],
+
+
+
     ####  default settings    #############################################
     ## local_project_path = <current path running your fabfile>          ##
     ## local_release_path = <local_project_path>/release                 ##
@@ -43,12 +44,9 @@ params = {
     "customized_remote_shared_path"  : "",
     "customized_remote_current_path" : "",
     "customized_remote_release_path" : "",
-
     "customized_shared_symlinks" : [],    
     ### sample [["<symbol link>", "<real location>"]]  
     ### Attention !!!! : if no customized_config_symlinks,  left it empty as []  not [[]]
-
-    "customized_nginx_installation_makefile" : "",
 
 }
 
@@ -57,29 +55,27 @@ params = update_params(params)
 
 @task
 def init_sys():
-    '''system initialization'''
+    '''System Provisioning'''
     env.user = "ubuntu"
     update_system()
     #setup_firewall()
-    #install_amqp_tools()
-    #install_supervisor()
-    #install_mariadb_dev(params) 
-    #install_nginx(params)
-    #install_parity()
+    install_amqp_tools()
+    install_supervisor()
+    install_mariadb_dev(params) 
     #install_nodejs(params)
     add_user(params["username"])
 
 @task
 def install_deps():
-    '''install prerequisites, create folders and config files'''
+    '''Install dependencies, create folders and config files'''
     env.user = params["username"]
-    install_ruby(params["ruby_version"])    
+    install_ruby(params)    
     setup_directories(params)
     create_config_files(params)
 
 @task
 def deploy(theme="notheme"):
-    '''deploy source code'''
+    '''Deploy source code to server'''
     env.user = params["username"]
     if not theme=="notheme":
         params["theme"] = theme
@@ -90,6 +86,10 @@ def deploy(theme="notheme"):
         params["config_symlinks"].update(params["path_symlinks"])
         deploy_src(params)
 
+@task
+def check_version():
+    '''Check current release version'''
+    check_ver(params)
 
 
 @task
