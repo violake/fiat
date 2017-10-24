@@ -1,3 +1,4 @@
+require_relative 'westpac_validation'
 module Fiat
   class BeyondValidation < WestpacValidation
 

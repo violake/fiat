@@ -1,3 +1,4 @@
+require_relative 'base_validation'
 module Fiat
   class BankValidation < BaseValidation
 

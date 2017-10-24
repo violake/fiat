@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require_relative './config/environment'
 require 'thor'
 require_relative './app/services/payment_import'
