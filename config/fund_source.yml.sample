@@ -10,10 +10,10 @@ fiat_accounts:
       honesty_point: 1
       acceptable_amount:
         floor: 1000
-    - bank: Westpac
-      account_name: Peak International Pty Ltd
-      bsb: '034702'
-      account_number: 094844
+    - bank: Beyond Bank Australia
+      account_name: 'Peak International Pty Ltd'
+      bsb: '805022'
+      account_number: '03651883'
       honesty_point: 0
   usd:
     bank_accounts:
