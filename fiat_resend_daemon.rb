@@ -6,16 +6,16 @@ require_relative './service/fiatd-resender'
 
 scheduler = Rufus::Scheduler.new
 
+fiatd_resender = FiatdResender.new(FiatConfig.new)
+
 terminate = proc do
-  puts "Polling Terminated"
+  puts "FiatResend Terminated"
   fiatd_resender.shutdown
   scheduler.shutdown(:wait)
   puts "Stop"
 end
 Signal.trap("TERM", &terminate)
 Signal.trap("INT", &terminate)
-
-fiatd_resender = FiatdResender.new(FiatConfig.new)
 
 $logger = fiatd_resender.logger
 
@@ -29,7 +29,7 @@ scheduler.every "#{fiatd_resender.frequence}m", first: :now do
   end
 end
 
-scheduler.every "1d", first: :now do
+scheduler.cron '0 0 * * *', first: :now do
   begin
     $logger.debug("FiatdResender sync bank accounts start !")
     fiatd_resender.sync_bank_accounts
