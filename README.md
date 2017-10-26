@@ -74,8 +74,18 @@ rabbitmq.yml    -- username, password, queue's names for fiat to use RabbitMQ se
 fund_source.yml -- bank accounts sync from ACX not needed when deploy
 ```
 
-  * Configure supervisor refer to `contribs/supervisor.d/fiatd.conf`
+  * Configure supervisor refer to `contribs/supervisor.d/fiatd.conf` and `contribs/supervisor.d/fiatd_resend.conf`
+  edit these config file and copy to supervisor's config folder, call supervisor to read new config files, update and check status
+```
+cp contribs/supervisor.d/*.conf /etc/supervisor/conf.d
 
+supervisorctl reread
+supervisorctl update
+supervisorctl status
+
+fiatd                            RUNNING   pid 1070, uptime 0:47:11
+fiatd_resend                     RUNNING   pid 1836, uptime 0:47:18
+```
 
 ## Contribution guidelines ###
 
@@ -106,9 +116,10 @@ Fiat Rails Server
 
 Fiat daemon
 
- `fiat_daemon`
- 
- `fiat_resend_daemon`
+```
+supervisorctl start fiatd
+supervisorctl start fiatd_resend
+```
 
 FiatCLI
 
