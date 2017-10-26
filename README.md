@@ -59,15 +59,19 @@ application.yml -- for session shared with ACX
 database.yml    -- deployment, production, test for rails api; fiatd for fiat daemon to update payments according to message ACX replied
 
 fiat.yml
-  payment_type: ["bank"]          -- type of payment, for now only bank
-  log_level: DEBUG                -- log level
-  archive_limit: 7                -- data could be archived (over "7" days)
-  search_day_diff: 3              -- when searching payments using filter date, payments "3" days ago from the filter date will be returned
-  member_whitelist: ["1", "2"]    -- member_ids that could use apis
-  resend_frequence: 10            -- the fiat resend daemon frequence: run 'resend' every "10" minutes
-  resend_lag: 60                  -- resend payments that have no reply for over "60" minutes
+  payment_type: ["bank"]            -- type of payment, for now only bank
+  log_level: DEBUG                  -- log level
+  archive_limit: 7                  -- data could be archived (over "7" days)
+  search_day_diff: 3                -- when searching payments using filter date, payments "3" days ago from the filter date will be returned
+  member_whitelist: ["1", "2"]      -- member_ids that could use apis
+  resend_frequence: 10              -- the fiat resend daemon payment resend frequence: run 'resend' every "10" minutes
+  fund_refresh_cron: "5 0 * * *"  -- the fiat resend daemon bank account refresh cron frequence: 0:05 everyday
+  resend_lag: 60                    -- resend payments that have no reply for over "60" minutes
+  rails_env: "production"           -- for fiat daemon to start normally 
 
 rabbitmq.yml    -- username, password, queue's names for fiat to use RabbitMQ server
+
+fund_source.yml -- bank accounts sync from ACX not needed when deploy
 ```
 
   * Configure supervisor refer to `contribs/supervisor.d/fiatd.conf`

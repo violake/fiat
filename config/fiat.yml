@@ -5,6 +5,7 @@ fiat: &default
   search_day_diff: 3
   member_whitelist: ["1", "2"]
   resend_frequence: 10
+  fund_refresh_cron: "5 0 * * *"
   resend_lag: 60
   rails_env: "development"
 

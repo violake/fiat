@@ -35,12 +35,17 @@ class FiatdResender
     @resending = true
   end
 
+  def bank_cron
+    @fiat_config[:fiat][:fund_refresh_cron]
+  end
+
   def frequence
     @fiat_config[:fiat][:resend_frequence]
   end
 
   def sync_bank_accounts
-    if !@fiat_config[:fund_timestamp] || Time.now - @fiat_config[:fund_timestamp] > 1.days
+    hash = YAML.load_file("./config/fund_source.yml")
+    if !hash["fund_timestamp"] || Time.now - hash["fund_timestamp"] > 1.days
       @fiat_server.bank.sync_bank_accounts
     end
   end

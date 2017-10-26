@@ -29,7 +29,7 @@ scheduler.every "#{fiatd_resender.frequence}m", first: :now do
   end
 end
 
-scheduler.cron '0 0 * * *', first: :now do
+scheduler.cron "#{fiatd_resender.bank_cron}", first: :now do
   begin
     $logger.debug("FiatdResender sync bank accounts start !")
     fiatd_resender.sync_bank_accounts
