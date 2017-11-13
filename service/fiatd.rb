@@ -166,7 +166,7 @@ class Fiatd
     raise InvalidArgumentError unless params["account_id"].is_a? Integer
     {
       :isvalid => true,
-      :customer_code => @server.getcustomercode(params["account_id"], params["currency"]),
+      :customer_code => @server.getcustomercode(params["account_id"]),
       :ismine  => true,
       :account_id => params["account_id"]
     }
@@ -195,7 +195,7 @@ class Fiatd
     raise InvalidArgumentError unless params["customer_code"].is_a? String && params["customer_code"].size == 16
     raise InvalidArgumentError unless params["account_id"].is_a? Integer
     raise InvalidArgumentError unless params["currency"].is_a? String
-    server_response = @server.validatecustomercode(params["customer_code"], params["account_id"], params["currency"])
+    server_response = @server.validatecustomercode(params["customer_code"], params["account_id"])
     {
       :isvalid => server_response[:isvalid],
       :customer_code => params["customer_code"],

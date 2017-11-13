@@ -14,7 +14,7 @@ gem "bunny"
 
 gem 'enumerize'
 gem 'hashie'
-gem 'codecal'
+gem 'codecal', '~>0.3.3'
 gem 'will_paginate'
 gem 'tzinfo-data'
 gem 'redis-rails'

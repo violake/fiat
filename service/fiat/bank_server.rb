@@ -5,6 +5,7 @@ require 'codecal'
 require 'active_record'
 require 'enumerize'
 
+require 'paper_trail'
 require './app/models/application_record'
 Dir['./app/models/*.rb'].each {|file| require file }
 Dir['./app/models/payments/*.rb'].each {|file| require file }
@@ -26,8 +27,8 @@ class BankServer
   #
   # return : string  - customer deposit code
   #
-  def getcustomercode(account_id, currency)
-    result = Codecal.bank_customer_code_generate(account_id, currency)
+  def getcustomercode(account_id)
+    result = Codecal.simple_code_generate(account_id)
     raise CodecalRPCError, result[:error] if result[:error]
     result[:customer_code]   #Customer Code
   end
@@ -46,9 +47,9 @@ class BankServer
   #   ismine => <ismine>     : boolean  - true if this 'customer deposit code' is mine
   # }
   #
-  def validatecustomercode(customer_code, account_id, currency)
-    valid = Codecal.validate_bank_customer_code(customer_code)
-    check_result = getcustomercode(account_id, currency) if valid
+  def validatecustomercode(customer_code, account_id)
+    valid = Codecal.validate_simple_code(customer_code)
+    check_result = getcustomercode(account_id) if valid
     {isvalid: valid, ismine: check_result ? check_result==customer_code : false}
   end
 
