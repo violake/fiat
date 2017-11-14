@@ -3,7 +3,7 @@ require_relative './config/environment'
 require 'thor'
 require_relative './app/services/payment_import'
 require_relative './config/fiat_config'
-
+require_relative './service/fiat-mailer'
 
 class FiatCLI < Thor
   
@@ -36,7 +36,34 @@ class FiatCLI < Thor
     end  
   end 
 
-  
+  desc "exportErrorCSV", "export error payments to csv file or send email with attachment"
+  method_option :to_email, aliases: '-t', type: :string, required: false, desc: "email address for whom you need to inform."
+  method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
+  def exportErrorCSV
+    raise "needs at least one option for this command. -t / -f " if options.size == 0
+    rows = Payment.with_result(:error).to_csv
+    if options[:to_email]
+      opts = {
+              server: @fiat_config[:fiat_email][:server],
+              port: @fiat_config[:fiat_email][:port],
+              domain: @fiat_config[:fiat_email][:domain],
+              username: @fiat_config[:fiat_email][:username],
+              password: @fiat_config[:fiat_email][:password],
+              from: @fiat_config[:fiat_email][:from],
+              from_alias: @fiat_config[:fiat_email][:from_alias],
+              subject: @fiat_config[:fiat_email][:subject],
+              starttls: @fiat_config[:fiat_email][:starttls]
+              }
+      FiatMailer.send_email(options[:to_email], opts, rows) 
+    elsif options[:filename]
+      puts "writing file"
+      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
+      puts "done"
+    else
+      puts "error input: #{options}"
+    end
+  end
+    
   desc "dailyAmount currency, *params", "show daily amount summary."
   long_desc <<-LONGDESC
     Check account daily payment summary
