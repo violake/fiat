@@ -14,6 +14,17 @@ class FiatCLI < Thor
   def initialize(args = [], local_options = {}, config = {})
     super(args, local_options, config)
     @fiat_config = FiatConfig.new
+    @opts = {
+      server: @fiat_config[:fiat_email][:server],
+      port: @fiat_config[:fiat_email][:port],
+      domain: @fiat_config[:fiat_email][:domain],
+      username: @fiat_config[:fiat_email][:username],
+      password: @fiat_config[:fiat_email][:password],
+      from: @fiat_config[:fiat_email][:from],
+      from_alias: @fiat_config[:fiat_email][:from_alias],
+      subject: @fiat_config[:fiat_email][:subject],
+      starttls: @fiat_config[:fiat_email][:starttls]
+      }
   end
 
   desc "importCSV csv_file_name", "check payments csv file data and import into database then sending to ACX via MQ"
@@ -43,18 +54,7 @@ class FiatCLI < Thor
     raise "needs at least one option for this command. -t / -f " if options.size == 0
     rows = Payment.with_result(:error).to_csv
     if options[:to_email]
-      opts = {
-              server: @fiat_config[:fiat_email][:server],
-              port: @fiat_config[:fiat_email][:port],
-              domain: @fiat_config[:fiat_email][:domain],
-              username: @fiat_config[:fiat_email][:username],
-              password: @fiat_config[:fiat_email][:password],
-              from: @fiat_config[:fiat_email][:from],
-              from_alias: @fiat_config[:fiat_email][:from_alias],
-              subject: @fiat_config[:fiat_email][:subject],
-              starttls: @fiat_config[:fiat_email][:starttls]
-              }
-      FiatMailer.send_email(options[:to_email], opts, rows) 
+      FiatMailer.send_email(options[:to_email], @opts, rows) 
     elsif options[:filename]
       puts "writing file"
       File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
