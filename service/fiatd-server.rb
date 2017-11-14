@@ -6,7 +6,7 @@ class FiatdServer
 
   def initialize(logger)
     CONFIG[:fiat][:payment_type].each do |fiat|
-      instance_variable_set("@#{fiat}_server", Kernel.const_get("#{fiat.capitalize}Server").new(CONFIG[fiat], logger, fiat))
+      instance_variable_set("@#{fiat}_server", Kernel.const_get("#{fiat.capitalize}Server").new(CONFIG[fiat], logger))
     end
   end
 

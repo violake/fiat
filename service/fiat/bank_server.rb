@@ -13,10 +13,9 @@ require_relative '../../util/error_handler'
 require_relative '../../db/data_accessor.rb'
 
 class BankServer
-  def initialize(fiat_config, logger, currency)
+  def initialize(fiat_config, logger)
     @fiat_config = fiat_config
     @logger = logger
-    @currency = currency
   end
 
   #

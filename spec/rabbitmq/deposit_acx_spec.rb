@@ -3,7 +3,7 @@ require_relative "../spec_helper"
 
 RSpec.describe BankServer do
 
-  before(:all) { @bs = BankServer.new(FiatConfig.new["bank"], Logger.new(STDOUT), "bank") }
+  before(:all) { @bs = BankServer.new(FiatConfig.new["bank"], Logger.new(STDOUT)) }
   let!(:payments_data) { create_list(:payment, 10) }
   let(:payment_id) { payments_data.first.id }
   let(:deposit_remote) { {"deposit_id"=> "123",
