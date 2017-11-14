@@ -95,7 +95,7 @@ class FiatCLI < Thor
     raise "currency not found: '#{currency}'" unless @fiat_config[:fiat_accounts].has_key? currency
     raise "bank account error '#{bank_account}'" if bank_account && ! (/\d{6}-\d{6,8}/.match(bank_account) )
     raise "invalid bank account: '#{bank_account}' " if bank_account && !get_bank_account_detail(bank_account)
-    Payment.get_daily_sum(start_date, end_date, currency, bank_account.delete('-')).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
+    Payment.get_daily_sum(start_date, end_date, currency, bank_account ? bank_account.delete('-') : nil).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
   end
   
   private
