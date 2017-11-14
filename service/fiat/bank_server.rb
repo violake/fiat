@@ -91,7 +91,12 @@ class BankServer
   end
 
   def resend
-    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < 4', Time.now.utc - @fiat_config[:resend_lag].minutes).inject(0) do |count, payment|
+    Payment.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |payment|
+      payment.result = :error
+      payment.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
+      payment.save
+    end
+    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, payment|
       response = {"command": "reconcile", "payment": payment}
       AMQPQueue.enqueue(response)
       @logger.debug "resent :#{response}"

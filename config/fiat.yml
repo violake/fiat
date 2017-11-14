@@ -7,6 +7,7 @@ fiat: &default
   resend_frequence: 10
   fund_refresh_cron: "1 6 * * *"
   resend_lag: 60
+  resend_times: 3
   rails_env: "development"
 
 bank:
