@@ -105,6 +105,24 @@ class BankServer
     end
   end
 
+  def update_send_single_payment(id, params)
+    payment = Payment.find(id)
+    if payment.mend_error(params)
+      send_payments([payment])
+    else
+      raise "saving payment(#{id}) error: '#{payment.errors.messages}'"
+    end
+  end
+
+  def send_single_payment(id)
+    payment = Payment.find(id)
+    send_payments([payment])
+  end
+
+  def get_payment(id)
+    payment = Payment.find(id)
+  end
+
   def sync_bank_accounts
     response = {"command"=>"syncbankaccounts", "key"=>"bank"}
     AMQPQueue.enqueue(response)
@@ -134,6 +152,20 @@ class BankServer
 
     File.write("./config/fund_source.yml", hash.to_yaml)
     return response = {log: true, result: "bank accounts refreshed"}
+  end
+
+  private 
+
+  def send_payments(payments)
+    payments.each do |payment|
+      response = {"command": "reconcile", "payment": payment}
+      AMQPQueue.enqueue(response)
+      @logger.debug "sent :#{response}"
+      unless payment.status_sent?
+        payment.status = :sent
+        payment.save
+      end
+    end
   end
 
 end

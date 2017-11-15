@@ -1,16 +1,15 @@
 #!/usr/bin/env ruby
 require_relative './config/environment'
 require 'thor'
+require 'codecal'
 require_relative './app/services/payment_import'
 require_relative './config/fiat_config'
 require_relative './service/fiat-mailer'
+require_relative './util/fiatd_logger'
+require_relative './service/fiatd-server'
 
 class FiatCLI < Thor
   
-  #==== Initalize the class
-  #
-  # read and parse database.yml on the same directory
-  #
   def initialize(args = [], local_options = {}, config = {})
     super(args, local_options, config)
     @fiat_config = FiatConfig.new
@@ -31,27 +30,23 @@ class FiatCLI < Thor
   method_option :timezone, aliases: '-t', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
   method_option :bank_account, aliases: '-a', type: :string, required: true, desc: "please give the bank account if csv doesn't have, eg: '033152-468666'"
   def importCSV(file)
-    begin
-      raise "timezone format error: '#{options[:timezone]}'. eg: [+08:00] " unless /^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone])
-      raise "bank account error: '#{options[:bank_account]}' " if !options[:bank_account] || !( /\d{6}-\d{6,8}/.match(options[:bank_account]) )
-      params = options.inject({}) {|hash, (k,v)| hash.merge!({k.to_sym=>v})}
-      #params[:timezone] ||= "+11:00"
-      #params[:bank_account] ||= "805022-03651883" 
-      bank_account = get_bank_account_detail(params[:bank_account], params)
-      raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
-      params[:bank_account] = bank_account
-      params[:source_type] = bank_account["bank"].split(' ').shift.downcase
-      puts Fiat::PaymentImport.new.importPaymentsFile(file, params)
-    rescue Exception=>e
-      puts e.message
-    end  
+    raise "timezone format error: '#{options[:timezone]}'. eg: [+08:00] " unless /^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone])
+    raise "bank account error: '#{options[:bank_account]}' " if !options[:bank_account] || !( /\d{6}-\d{6,8}/.match(options[:bank_account]) )
+    params = convert_to_hash(options)
+    bank_account = get_bank_account_detail(params[:bank_account], params)
+    raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
+    params[:bank_account] = bank_account
+    params[:source_type] = bank_account["bank"].split(' ').shift.downcase
+    puts Fiat::PaymentImport.new.importPaymentsFile(file, params)
+  rescue Exception=>e
+    puts "Error: #{e.message}" 
   end 
 
   desc "exportErrorCSV", "export error payments to csv file or send email with attachment"
-  method_option :to_email, aliases: '-t', type: :string, required: false, desc: "email address for whom you need to inform."
+  method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
   def exportErrorCSV
-    raise "needs at least one option for this command. -t / -f " if options.size == 0
+    raise "needs at least one option for this command. -e / -f " if options.size == 0
     rows = Payment.with_result(:error).to_csv
     if options[:to_email]
       FiatMailer.send_email(options[:to_email], @opts, rows) 
@@ -62,6 +57,52 @@ class FiatCLI < Thor
     else
       puts "error input: #{options}"
     end
+  rescue Exception=>e
+    puts "Error: #{e.message}"
+  end
+
+  desc "updatePayment id", "update error payment for reconciliation"
+  method_option :bank_account, aliases: '-a', type: :string, required: false, desc: "account number which the payment was transfered to."
+  method_option :customer_code, aliases: '-c', type: :string, required: false, desc: "customer code for the account of a particular customer."
+  method_option :description, aliases: '-d', type: :string, required: false, desc: "description for this payment."
+  def updatePayment(id)
+    raise "needs at least one option for this command. -a / -c " if options.size == 0
+    raise "customer code invalid '#{options[:customer_code]}'" if options[:customer_code] && !Codecal.validate_simple_code(options[:customer_code] )
+    params = convert_to_hash(options)
+    if params[:bank_account]
+      bank_account = get_bank_account_detail(params[:bank_account])
+      raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
+      params[:bank_account] = bank_account
+    end
+    
+    puts "payment(#{id}) updating..."
+    logger = FiatdLogger.new(@fiat_config[:fiat][:log_level])
+    bankServer = BankServer.new(@fiat_config["bank"], logger)
+    bankServer.update_send_single_payment(id, params)
+    puts "payment(#{id}) sent to MQ"
+  rescue Exception=>e
+    puts "Error: #{e.message}"
+  end
+
+  desc "sendPayment id", "send payment to MQ for reconciliation"
+  def sendPayment(id)
+    puts "payment(#{id}) sending..."
+    logger = FiatdLogger.new(@fiat_config[:fiat][:log_level])
+    bankServer = BankServer.new(@fiat_config["bank"], logger)
+    bankServer.send_single_payment(id)
+    puts "payment(#{id}) sent to MQ"
+  rescue Exception=>e
+    puts "Error: #{e.message}"
+  end
+
+  desc "getPayment id", "get payment record"
+  def getPayment(id)
+    logger = FiatdLogger.new(@fiat_config[:fiat][:log_level])
+    logger = FiatdLogger.new(@fiat_config[:fiat][:log_level])
+    bankServer = BankServer.new(@fiat_config["bank"], logger)
+    puts bankServer.get_payment(id).inspect
+  rescue Exception=>e
+    puts "Error: #{e.message}"
   end
     
   desc "dailyAmount currency, *params", "show daily amount summary."
@@ -96,6 +137,8 @@ class FiatCLI < Thor
     raise "bank account error '#{bank_account}'" if bank_account && ! (/\d{6}-\d{6,8}/.match(bank_account) )
     raise "invalid bank account: '#{bank_account}' " if bank_account && !get_bank_account_detail(bank_account)
     Payment.get_daily_sum(start_date, end_date, currency, bank_account ? bank_account.delete('-') : nil).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
+  rescue Exception=>e
+    puts "Error: #{e.message}"
   end
   
   private
@@ -111,6 +154,10 @@ class FiatCLI < Thor
       end }
     end
     b_account
+  end
+
+  def convert_to_hash(options)
+    options.inject({}) {|hash, (k,v)| hash.merge!({k.to_sym=>v})}
   end
 
 end
