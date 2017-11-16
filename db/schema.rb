@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171010004031) do
+ActiveRecord::Schema.define(version: 20171116053232) do
 
   create_table "deposits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "account_id"
@@ -53,7 +53,7 @@ ActiveRecord::Schema.define(version: 20171010004031) do
     t.string "txid"
     t.text "description"
     t.text "sender_info"
-    t.string "error_info"
+    t.text "error_info"
     t.integer "send_times", default: 0
     t.string "source_type"
     t.integer "reject_times", default: 0
