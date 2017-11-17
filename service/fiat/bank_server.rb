@@ -64,7 +64,7 @@ class BankServer
   def autodeposit(params)
     payment_id = params["payment_id"]
     response = {log: true, payment_id: payment_id}
-    unless params["error"]
+    unless params["error"] || !params["deposit"]
       deposit_remote = params["deposit"]
       response[:deposit_id] = deposit_remote["deposit_id"]
       payment = Payment.find(payment_id)
