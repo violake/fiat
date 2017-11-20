@@ -9,6 +9,7 @@ fiat: &default
   resend_lag: 60
   resend_times: 3
   rails_env: "development"
+  bank_accounts_filter: ["honesty_point", "acceptable_amount"]
 
 bank:
   <<: *default
