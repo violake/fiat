@@ -131,3 +131,24 @@ supervisorctl start fiatd_resend
 FiatCLI
 
  `./fiatCLI`
+
+### Cronjob
+
+Auto grab google doc(csv) and import it by calling fiatCLI. Save the csv file in history
+
+modify the "path_to" of grab.sh
+
+APP_PATH=path_to/fiat/
+LOG_FILE=path_to/history/grab.log
+BEYONG_HISTORY=path_to/history/beyond
+WESTPAC_HISTORY=path_to/history/westpac
+
+Change the key of google docs
+
+key_beyond=1rOvx90qcMiLWSAL-aUO2qmp0p4VEGTzSUsIeQZYpR24
+key_westpac=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+command:
+```
+sh grab.sh
+```
