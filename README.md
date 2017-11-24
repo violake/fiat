@@ -40,20 +40,10 @@ rspec
 
 ### Deployment instructions
 
-  * `rake init:fiat_queues`
-  * Database configuration
 
-```
-  rake db:create 
-  rails generate paper_trail:install
-  rake db:migrate
-
-```
-
-  * Config folder: ./config/. config files: application.yml, database.yml, fiat.yml, rabbitmq.yml 
+  * Config folder: ./config/. config files: application.yml, database.yml, fiat.yml, rabbitmq.yml, transition_deposits.yml
   *               in database.yml, modify "fiatd: database:" the same as production when it's deployed to production server
 
-```
 application.yml -- for session shared with ACX
 
 database.yml    -- deployment, production, test for rails api; fiatd for fiat daemon to update payments according to message ACX replied
@@ -65,19 +55,36 @@ fiat.yml
   search_day_diff: 3                -- when searching payments using filter date, payments "3" days ago from the filter date will be returned
   member_whitelist: ["1", "2"]      -- member_ids that could use apis
   resend_frequence: 10              -- the fiat resend daemon payment resend frequence: run 'resend' every "10" minutes
-  fund_refresh_cron: "5 0 * * *"  -- the fiat resend daemon bank account refresh cron frequence: 0:05 everyday
+  fund_refresh_cron: "5 0 * * *"    -- the fiat resend daemon bank account refresh cron frequence: 0:05 everyday
   resend_lag: 60                    -- resend payments that have no reply for over "60" minutes
-  rails_env: "production"           -- for fiat daemon to start normally 
+  resend_times: 3                   -- limitation for resend times
+  rails_env: "development"          -- for fiat daemon to start normally in development mode
+  bank_accounts_filter: ["honesty_point", "acceptable_amount"]  -- filter for bank accounts' detail
 
 rabbitmq.yml    -- username, password, queue's names for fiat to use RabbitMQ server
 
-fund_source.yml -- bank accounts sync from ACX not needed when deploy
+fund_source.yml -- bank accounts sync from ACX, do not need to edit it when deploying
+
+transition_deposits.yml -- a filter for transition period that make sure all the code in description is customer code. Certain record's status will be error if the code is in this file
+
+
+  * `rake init:fiat_queues`
+  * Database configuration
+
 ```
+  rake db:create 
+  rails generate paper_trail:install
+  rake db:migrate
+
+```
+
+
 
   * Configure supervisor refer to `contribs/supervisor.d/fiatd.conf` and `contribs/supervisor.d/fiatd_resend.conf`
   edit these config file and copy to supervisor's config folder, call supervisor to read new config files, update and check status
 ```
 cp contribs/supervisor.d/*.conf /etc/supervisor/conf.d
+
 
 supervisorctl reread
 supervisorctl update
