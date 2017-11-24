@@ -42,7 +42,7 @@ module Fiat
     end
 
     def filter_transition_deposit_id
-      @@deposit_ids = nil
+      @@deposit_ids = nil unless defined? @@deposit_ids
       path = Rails.root.join('config', "transition_deposits.yml")
       @@deposit_ids ||= YAML.load_file(File.new(path))["deposit_ids"] if File.exist?(path)
 
