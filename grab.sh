@@ -21,6 +21,8 @@ WESTPAC_NAME='Westpac_statement'
 BEYONG_HISTORY=path_to/history/beyond
 WESTPAC_HISTORY=path_to/history/westpac
 
+USER_EMAIL=xxx@mail.com
+
 mkdir -p $BEYONG_HISTORY
 mkdir -p $WESTPAC_HISTORY
 
@@ -33,3 +35,5 @@ curl -L "https://docs.google.com/spreadsheets/d/$key_westpac/export?exportFormat
 echo $TIME 'import Westpac Statement' >> $LOG_FILE
 cd $APP_PATH && ./fiatCLI.rb importCSV /tmp/$WESTPAC_NAME.csv -t $ZONE -a $WESTPAC_ACCOUNT >> $LOG_FILE
 cp /tmp/${WESTPAC_NAME}.csv $WESTPAC_HISTORY/${WESTPAC_NAME}_$DATE.csv
+
+./fiatCLI.rb exportErrorCSV -e $USER_EMAIL >> $LOG_FILE
