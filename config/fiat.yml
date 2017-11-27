@@ -28,3 +28,4 @@ fiat_email:
   from_alias: 'Fiat Mail'
   subject: "Try me"
   starttls: true
+  body: 'Please find the attachment.'

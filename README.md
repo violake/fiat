@@ -148,6 +148,10 @@ Change the key of google docs
 key_beyond=1rOvx90qcMiLWSAL-aUO2qmp0p4VEGTzSUsIeQZYpR24
 key_westpac=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+Edit the user's email ( the person who import the bank statements)
+
+USER_EMAIL=xxx@mail.com
+
 command:
 ```
 sh grab.sh

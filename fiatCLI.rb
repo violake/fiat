@@ -22,7 +22,8 @@ class FiatCLI < Thor
       from: @fiat_config[:fiat_email][:from],
       from_alias: @fiat_config[:fiat_email][:from_alias],
       subject: @fiat_config[:fiat_email][:subject],
-      starttls: @fiat_config[:fiat_email][:starttls]
+      starttls: @fiat_config[:fiat_email][:starttls],
+      body: @fiat_config[:fiat_email][:body]
       }
   end
 
