@@ -71,10 +71,13 @@ class BankServer
       deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
       if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
         deposit.set_values(deposit_remote)
-        deposit.save
-        deposit = Deposit.find(deposit.id)
-        payment.deposit(deposit, deposit_remote["error"])
-        response[:success] = true
+        if deposit.save
+          payment.deposit(deposit, deposit_remote["error"])
+          response[:success] = true
+        else
+          response[:success] = false
+          response[:error] = deposit.errors.messages
+        end
       else
         response[:success] = false
         response[:error] = "deposit already done"
