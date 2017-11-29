@@ -64,24 +64,8 @@ class BankServer
   def autodeposit(params)
     payment_id = params["payment_id"]
     response = {log: true, payment_id: payment_id}
-    unless params["error"] || !params["deposit"]
-      deposit_remote = params["deposit"]
-      response[:deposit_id] = deposit_remote["deposit_id"]
-      payment = Payment.find(payment_id)
-      deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
-      if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
-        deposit.set_values(deposit_remote)
-        if deposit.save
-          payment.deposit(deposit, deposit_remote["error"])
-          response[:success] = true
-        else
-          response[:success] = false
-          response[:error] = deposit.errors.messages
-        end
-      else
-        response[:success] = false
-        response[:error] = "deposit already done"
-      end
+    if !params["error"] && params["deposit"]
+      pair_deposit_to_payment(params["deposit"], response)
     else
       payment = Payment.find(payment_id)
       payment.error_info = params["error"]
@@ -158,6 +142,25 @@ class BankServer
   end
 
   private 
+
+  def pair_deposit_to_payment(deposit_remote, response)
+    response[:deposit_id] = deposit_remote["deposit_id"]
+    payment = Payment.find(response[:payment_id])
+    deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
+    if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
+      deposit.set_values(deposit_remote)
+      if deposit.save
+        payment.deposit(deposit, deposit_remote["error"])
+        response[:success] = true
+      else
+        response[:success] = false
+        response[:error] = deposit.errors.messages
+      end
+    else
+      response[:success] = false
+      response[:error] = "deposit already done"
+    end
+  end
 
   def send_payments(payments)
     payments.each do |payment|
