@@ -27,13 +27,20 @@ mkdir -p $BEYONG_HISTORY
 mkdir -p $WESTPAC_HISTORY
 
 curl -L "https://docs.google.com/spreadsheets/d/$key_beyond/export?exportFormat=csv" > /tmp/${BEYOND_NAME}.csv 
-echo $TIME 'import Beyond Statement' >> $LOG_FILE
-cd $APP_PATH && ./fiatCLI.rb importCSV /tmp/${BEYOND_NAME}.csv -t $ZONE -a $BEYOND_ACCOUNT >> $LOG_FILE
+time_a="$TIME import Beyond Statement"
+cd $APP_PATH
+log_a="$(./fiatCLI.rb importCSV /tmp/${BEYOND_NAME}.csv -t $ZONE -a $BEYOND_ACCOUNT)"
 cp /tmp/${BEYOND_NAME}.csv $BEYONG_HISTORY/${BEYOND_NAME}_$DATE.csv
 
 curl -L "https://docs.google.com/spreadsheets/d/$key_westpac/export?exportFormat=csv" > /tmp/${WESTPAC_NAME}.csv 
-echo $TIME 'import Westpac Statement' >> $LOG_FILE
-cd $APP_PATH && ./fiatCLI.rb importCSV /tmp/$WESTPAC_NAME.csv -t $ZONE -a $WESTPAC_ACCOUNT >> $LOG_FILE
+time_b="$TIME import Westpac Statement"
+log_b="$(./fiatCLI.rb importCSV /tmp/$WESTPAC_NAME.csv -t $ZONE -a $WESTPAC_ACCOUNT)"
 cp /tmp/${WESTPAC_NAME}.csv $WESTPAC_HISTORY/${WESTPAC_NAME}_$DATE.csv
 
-./fiatCLI.rb exportErrorCSV -e $USER_EMAIL >> $LOG_FILE
+
+
+body="\n$time_a\n$log_a\n\n$time_a\n$log_b\n"
+
+echo $body >> $LOG_FILE
+
+./fiatCLI.rb exportErrorCSV -e $USER_EMAIL -b "$body\nPlease find the attachment." >> $LOG_FILE
