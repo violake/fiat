@@ -46,11 +46,12 @@ class FiatCLI < Thor
   desc "exportErrorCSV", "export error payments to csv file or send email with attachment"
   method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
+  method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
   def exportErrorCSV
     raise "needs at least one option for this command. -e / -f " if options.size == 0
     rows = Payment.with_result(:error).to_csv
     if options[:to_email]
-      FiatMailer.send_email(options[:to_email], @opts, rows) 
+      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
     elsif options[:filename]
       puts "writing file"
       File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
