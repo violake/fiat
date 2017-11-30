@@ -36,7 +36,11 @@ class FiatMailer
     encodedcontent = [csv].pack("m")   # base64
 
     marker = "Fiat"
-    
+
+    body = opts[:body].dup
+
+    puts body
+
     # Define the main headers.
     part1 = <<~EOF
     From: #{opts[:from_alias]} <#{opts[:from]}>
@@ -52,7 +56,7 @@ class FiatMailer
     Content-Type: text/plain
     Content-Transfer-Encoding:8bit
     
-    #{opts[:body]}
+    #{body.gsub!('\n', "\n")}
     --#{marker}
     EOF
     
