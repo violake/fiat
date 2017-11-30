@@ -2,6 +2,7 @@
 require_relative './config/environment'
 require_relative './config/fiat_config.rb'
 require_relative './service/fiatd'
+require_relative './service/fiat-mailer'
 
 fiatd = Fiatd.new(FiatConfig.new)
 
@@ -28,7 +29,11 @@ Signal.trap("INT", &terminate)
 logger.info("Fiat daemon start !")
 begin
   fiatd.start
-rescue RemainAlmostDoneError => e
-  logger.error("Please finish pending transaction before starting service")
+rescue Bunny::TCPConnectionFailed => e
+  msg = "Connect to RabbitMQ failed. Please check MQ server address."
+  logger.error(msg)
+  opts={subject: "ALERT: Fiat MQ",
+        body: "Fiat Error: #{msg}"}
+  FiatMailer.send_email(FiatConfig.new[:fiat_email][:admin_email], opts)
   exit(1)
 end

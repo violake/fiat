@@ -29,3 +29,4 @@ fiat_email:
   subject: "Try me"
   starttls: true
   body: 'Please find the attachment.'
+  admin_email: 'roger.fang@acx.io;violake@foxmail.com'

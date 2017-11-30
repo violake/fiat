@@ -1,18 +1,20 @@
 require 'net/smtp'
 require 'date'
+require_relative './config/fiat_config'
 
 class FiatMailer
 
-  def self.send_email(to,opts={},csv)
-    opts[:server]      ||= 'smtp.gmail.com'
-    opts[:port]        ||= 587
-    opts[:domain]      ||= 'gmail.com'
-    opts[:username]    ||= 'roger.yuan.fang@gmail.com'
-    opts[:password]    ||= '80576755itcfzyy'
-    opts[:from]        ||= 'roger.yuan.fang@gmail.com'
-    opts[:from_alias]  ||= 'Fiat Mail'
-    opts[:subject]     ||= "Error Payments "
-    opts[:body]        ||= ''
+  def self.send_email(to,opts={},csv=nil)
+    @@fiat_config = FiatConfig.new
+    opts[:server]      ||= @fiat_config[:fiat_email][:server]
+    opts[:port]        ||= @fiat_config[:fiat_email][:port]
+    opts[:domain]      ||= @fiat_config[:fiat_email][:domain]
+    opts[:username]    ||= @fiat_config[:fiat_email][:username]
+    opts[:password]    ||= @fiat_config[:fiat_email][:password]
+    opts[:from]        ||= @fiat_config[:fiat_email][:from]
+    opts[:from_alias]  ||= @fiat_config[:fiat_email][:from_alias]
+    opts[:subject]     ||= @fiat_config[:fiat_email][:subject]
+    opts[:body]        ||= @fiat_config[:fiat_email][:body]
     opts[:filename]    ||= 'errorpayments'
     opts[:to]            = to
 
@@ -33,7 +35,7 @@ class FiatMailer
 
   def self.make_content(csv, opts)
 
-    encodedcontent = [csv].pack("m")   # base64
+    encodedcontent = [csv].pack("m") if csv  # base64
 
     marker = "Fiat"
 
@@ -60,17 +62,23 @@ class FiatMailer
     --#{marker}
     EOF
     
-    # Define the attachment section
-    part3 = <<~EOF
-    Content-Type: multipart/mixed; name = \"#{opts[:filename]}\"
-    Content-Transfer-Encoding:base64
-    Content-Disposition: attachment; filename = "#{opts[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv"
+    mailtext = part1 + part2
+
+    if csv
+      # Define the attachment section
+      part3 = <<~EOF
+      Content-Type: multipart/mixed; name = \"#{opts[:filename]}\"
+      Content-Transfer-Encoding:base64
+      Content-Disposition: attachment; filename = "#{opts[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv"
+      
+      #{encodedcontent}
+      --#{marker}--
+      EOF
+
+      mailtext += part3
+    end
     
-    #{encodedcontent}
-    --#{marker}--
-    EOF
-    
-    mailtext = part1 + part2 + part3
+    mailtext 
   end
 
 end
