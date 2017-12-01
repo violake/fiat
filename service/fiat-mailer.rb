@@ -1,45 +1,69 @@
 require 'net/smtp'
 require 'date'
+require './config/fiat_config'
 
 class FiatMailer
 
-  def self.send_email(to,opts={},csv)
-    opts[:server]      ||= 'smtp.gmail.com'
-    opts[:port]        ||= 587
-    opts[:domain]      ||= 'gmail.com'
-    opts[:username]    ||= 'roger.yuan.fang@gmail.com'
-    opts[:password]    ||= '80576755itcfzyy'
-    opts[:from]        ||= 'roger.yuan.fang@gmail.com'
-    opts[:from_alias]  ||= 'Fiat Mail'
-    opts[:subject]     ||= "Error Payments "
-    opts[:body]        ||= ''
+  def self.send_email(to,opts={},csv=nil)
+    @@fiat_config = FiatConfig.new
+    opts[:server]      ||= @@fiat_config[:fiat_email][:server]
+    opts[:port]        ||= @@fiat_config[:fiat_email][:port]
+    opts[:domain]      ||= @@fiat_config[:fiat_email][:domain]
+    opts[:username]    ||= @@fiat_config[:fiat_email][:username]
+    opts[:password]    ||= @@fiat_config[:fiat_email][:password]
+    opts[:from]        ||= @@fiat_config[:fiat_email][:from]
+    opts[:from_alias]  ||= @@fiat_config[:fiat_email][:from_alias]
+    opts[:subject]     ||= @@fiat_config[:fiat_email][:subject]
+    opts[:body]        ||= @@fiat_config[:fiat_email][:body]
+    opts[:starttls]    ||= @@fiat_config[:fiat_email][:starttls]
     opts[:filename]    ||= 'errorpayments'
     opts[:to]            = to
+  
+    if csv
+      self.send_email_with_csv(opts,csv)
+    else
+      self.send_simple_email(opts)
+    end
 
+  rescue Exception=>e
+    print "Exception occured: " + e.message
+    puts e.backtrace.inspect
+  end
+
+  def self.send_email_with_csv(opts,csv)
     msg = self.make_content(csv, opts)
+    self.send_by_smtp(opts[:to], opts, msg)
+  end
 
+  def self.send_simple_email(opts)
+    msg = <<~MESSAGE_END
+    From: #{opts[:from_alias]} <#{opts[:from]}>
+    To: <#{opts[:to]}>
+    Subject: #{opts[:subject]}
+    
+    #{opts[:body].gsub('\n', "\n")}
+    MESSAGE_END
+
+    self.send_by_smtp(opts[:to], opts, msg)
+  end 
+
+  private
+
+  def self.send_by_smtp(to, opts, msg)
     puts "start sending"
-
     smtp = Net::SMTP.new opts[:server], opts[:port]
     smtp.enable_starttls if opts[:starttls]
     smtp.start(opts[:domain], opts[:username], opts[:password], :login) do
       smtp.send_message msg, opts[:from], to
       puts "email has been sent to #{to}"
     end
-  rescue Exception=>e
-    print "Exception occured: " + e.message
-    puts e.backtrace.inspect
   end
 
   def self.make_content(csv, opts)
 
-    encodedcontent = [csv].pack("m")   # base64
+    encodedcontent = [csv].pack("m") if csv  # base64
 
     marker = "Fiat"
-
-    body = opts[:body].dup
-
-    puts body
 
     # Define the main headers.
     part1 = <<~EOF
@@ -56,7 +80,7 @@ class FiatMailer
     Content-Type: text/plain
     Content-Transfer-Encoding:8bit
     
-    #{body.gsub!('\n', "\n")}
+    #{opts[:body].gsub('\n', "\n")}
     --#{marker}
     EOF
     

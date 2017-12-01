@@ -21,19 +21,19 @@ module Fiat
 
       # check validation according to payment type 
       if @source_type == nil || @source_type == "" || !Fiat::FUND_TYPE.include?(@source_type)
-        raise "source type error '#{@source_type}' !!"
+        raise "Import failed: source type error '#{@source_type}' !!"
       end
       validateclass = Fiat.const_get("#{@source_type.capitalize}Validation")
       missing = validateclass.check_columnname(@column_names)
-      raise "column missing : [#{missing.to_a.join(",")}]" if missing.size > 0
+      raise "Import failed: column missing - [#{missing.to_a.join(",")}]" if missing.size > 0
 
       #filter data if needed
       @payments = validateclass.filter(@payments) if validateclass.respond_to?("filter")
-      raise @payments if @payments.is_a? String
+      raise "Import failed: #{@payments}" if @payments.is_a? String
 
       @payments.each_with_index do |payment,index|
         valid, errormsg = validateclass.validate(payment)
-        raise "payments data error: #{errormsg} in line #{index+2} !!" unless valid
+        raise "Import failed: payments data error - #{errormsg} in line #{index+2} !!" unless valid
       end
     end
   end

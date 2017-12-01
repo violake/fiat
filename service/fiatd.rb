@@ -115,7 +115,7 @@ class Fiatd
 
 
   def shutdown
-    @ch.work_pool.shutdown
+    @ch.work_pool.shutdown(true)
   end
 
   #

@@ -25,6 +25,7 @@ fiat_email:
   password: '80576755itcfzyy'
   from: 'roger.yuan.fang@gmail.com'
   from_alias: 'Fiat Mail'
-  subject: "Try me"
+  subject: "Bank statement Import Result"
   starttls: true
   body: 'Please find the attachment.'
+  admin_email: ['dev@acx.io', 'devops@foxmail.com']
