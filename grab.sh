@@ -39,8 +39,8 @@ cp /tmp/${WESTPAC_NAME}.csv $WESTPAC_HISTORY/${WESTPAC_NAME}_$DATE.csv
 
 
 
-body="\n$time_a\n$log_a\n\n$time_a\n$log_b\n"
+body="\n$time_a\n$log_a\n\n$time_b\n$log_b\n"
 
-echo $body >> $LOG_FILE
+echo -e $body >> $LOG_FILE
 
 ./fiatCLI.rb exportErrorCSV -e $USER_EMAIL -b "$body\nPlease find the attachment." >> $LOG_FILE

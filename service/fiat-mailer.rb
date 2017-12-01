@@ -39,8 +39,6 @@ class FiatMailer
 
     body = opts[:body].dup
 
-    puts body
-
     # Define the main headers.
     part1 = <<~EOF
     From: #{opts[:from_alias]} <#{opts[:from]}>
