@@ -93,6 +93,7 @@ module Fiat
         @payments.push(row.to_h.merge!(add_hash) )
       end
       @read_size = @payments.size
+      raise "There is no payment in the csv file" if @read_size == 0
     end
 
     # save to payments table
