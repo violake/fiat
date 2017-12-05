@@ -136,6 +136,8 @@ FiatCLI
 
 Auto grab google doc(csv) and import it by calling fiatCLI. Save the csv file in history
 
+copy grab.sh to "shared" folder for the first deployment
+
 modify the "path_to" of grab.sh
 
 APP_PATH=path_to/fiat/
