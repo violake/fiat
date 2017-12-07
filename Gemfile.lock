@@ -43,7 +43,7 @@ GEM
     builder (3.2.3)
     bunny (2.7.1)
       amq-protocol (>= 2.2.0)
-    codecal (0.3.3)
+    codecal (0.3.4)
     concurrent-ruby (1.0.5)
     crass (1.0.2)
     daemons (1.2.4)
@@ -188,7 +188,7 @@ PLATFORMS
 
 DEPENDENCIES
   bunny
-  codecal (~> 0.3.3)
+  codecal (~> 0.3.4)
   daemons
   database_cleaner
   enumerize
