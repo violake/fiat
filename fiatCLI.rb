@@ -146,7 +146,9 @@ class FiatCLI < Thor
   private
   def get_bank_account_detail(bank_account, params=nil)
     b_account = nil
+    return nil unless @fiat_config[:fiat_accounts]
     @fiat_config[:fiat_accounts].to_hash.each do |currency, accounts|
+      return nil unless accounts
       accounts.each { |k, v| break if b_account ;v.each do |account|
         if account["bsb"] == bank_account.split("-")[0] && account["account_number"] == bank_account.split("-")[1]
           b_account = account.select {|key, _| not @fiat_config[:fiat][:bank_accounts_filter].include? key}

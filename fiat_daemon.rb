@@ -12,9 +12,8 @@ begin
 rescue Bunny::TCPConnectionFailed => e
   msg = "Connect to RabbitMQ failed.\nPlease check MQ server address."
   puts msg
-  opts={subject: "ALERT: Fiat MQ",
-        body: "Fiat Error: #{msg}"}
-  FiatMailer.send_email(FiatConfig.new[:fiat_email][:admin_email], opts)
+  #opts={subject: "ALERT: Fiat MQ", body: "Fiat Error: #{msg}"}
+  #FiatMailer.send_email(FiatConfig.new[:fiat_email][:admin_email], opts)
 rescue SignalException =>e
   puts "Terminating process .."
   fiatd.shutdown
