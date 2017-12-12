@@ -6,8 +6,8 @@ class Payment < ApplicationRecord
 
   extend Enumerize
 
-  enumerize :status, in: STATUS, scope: true
-  enumerize :result, in: RESULT, scope: true
+  enumerize :status, in: STATUS, scope: true, predicates: { prefix: true }
+  enumerize :result, in: RESULT, scope: true, predicates: { prefix: true }
 
   validates_presence_of :source_id, :source_name, :source_code, :payment_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
@@ -60,6 +60,21 @@ class Payment < ApplicationRecord
     self.save
   end
 
+  def mend_error(mend)
+    if self.result_error?
+      self.source_code = mend[:bank_account].to_json if mend[:bank_account]
+      self.customer_code = mend[:customer_code] if mend[:customer_code]
+      self.description += " | amend: " + mend[:description] if mend[:description]
+      self.result = :unreconciled
+      self.status = :new
+      self.error_info = nil
+      self.save
+    else
+      self.errors[:base] << "payment result is not 'error'!"
+      return false
+    end
+  end
+
   def archive!
     if self.status != :new
       self.status = :archived
@@ -79,18 +94,22 @@ class Payment < ApplicationRecord
   end
 
   def self.to_csv
-    attributes = %w{source_id
+    attributes = %w{id
                     source_name
                     source_code
+                    source_type
                     country
                     payment_type
                     amount
                     currency
+                    deposit_id
+                    customer_code
                     available
                     created_at
                     updated_at
-                    description
+                    matched_at
                     txid
+                    description
                     sender_info
                     error_info
                     status

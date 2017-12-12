@@ -32,12 +32,24 @@ module Fiat
       self.description = bank[:description]
       self.sender_info = bank[:sender_info]
       self.status = :new
-      customer_code = bank[:description].gsub(/\s+/, "").match(/[\d]{16}/) if bank[:description]
-      self.customer_code = customer_code && Codecal.validate_bank_customer_code(customer_code[0]) ? customer_code[0] : nil
+      customer_code = bank[:description].gsub(/\s+/, "").match(/[\d]{2,10}/) if bank[:description]
+      self.customer_code = customer_code && Codecal.validate_simple_code(customer_code[0].to_s) ? customer_code[0] : nil
       self.customer_code == nil ? self.result = :error : self.result = :unreconciled
       self.error_info = nil
       self.error_info = "missing customer deposit code" if self.result == :error
       self.source_type = bank[:source_type]
+      filter_transition_deposit_id
+    end
+
+    def filter_transition_deposit_id
+      @@deposit_ids = nil unless defined? @@deposit_ids
+      path = Rails.root.join('config', "transition_deposits.yml")
+      @@deposit_ids ||= YAML.load_file(File.new(path))["deposit_ids"] if File.exist?(path)
+
+      if @@deposit_ids.is_a?(Array) && self.customer_code && (@@deposit_ids.include?(self.customer_code))
+        self.error_info = "This code could be a deposit id. It needs to be manually handled."
+        self.result = :error
+      end
     end
   end
 

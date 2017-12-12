@@ -3,7 +3,7 @@ require_relative "../spec_helper"
 
 RSpec.describe BankServer do
 
-  before(:all) { @bs = BankServer.new(FiatConfig.new["bank"], Logger.new(STDOUT), "bank") }
+  before(:all) { @bs = BankServer.new(FiatConfig.new["bank"], Logger.new(STDOUT)) }
   let!(:payments_data) { create_list(:payment, 10) }
   let(:payment_id) { payments_data.first.id }
   let(:deposit_remote) { {"deposit_id"=> "123",
@@ -85,26 +85,27 @@ RSpec.describe BankServer do
 
   describe 'rpc call message comes' do
     it 'return code when call generate customer code with valid params' do
-      customer_code = @bs.getcustomercode(rpc["account_id"], rpc["currency"])
+      customer_code = @bs.getcustomercode(rpc["account_id"])
       expect(customer_code).not_to be_empty
-      expect(customer_code).to eq("0000000059036098")
+      expect(customer_code).to eq("51")
     end
 
     it 'raise CodecalRPCError when call generate customer code with invalid params' do
-      expect { @bs.getcustomercode(rpc["account_id"], "fdas") }.to raise_error(CodecalRPCError)
+      expect { @bs.getcustomercode("fdsa") }.to raise_error(CodecalRPCError)
     end
 
     it 'return json(valid:true) when call validate customer code with valid params' do
-      rpc["customer_code"]="0000000059036098"
-      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"], rpc["currency"])
+      rpc["customer_code"]="26"
+      rpc["account_id"]="2"
+      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"])
       expect(result).not_to be_empty
       expect(result[:isvalid]).to eq(true)
       expect(result[:ismine]).to eq(true)
     end
 
     it 'return json(valid:false) when call validate customer code with invalid params' do
-      rpc["customer_code"]="0000456059036098"
-      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"], rpc["currency"])
+      rpc["customer_code"]="52"
+      result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"])
       expect(result).not_to be_empty
       expect(result[:isvalid]).to eq(false)
       expect(result[:ismine]).to eq(false)

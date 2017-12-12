@@ -5,7 +5,9 @@ fiat: &default
   search_day_diff: 3
   member_whitelist: ["1", "2"]
   resend_frequence: 10
+  fund_refresh_cron: "1 6 * * *"
   resend_lag: 60
+  resend_times: 3
   rails_env: "production"
 
 bank:
@@ -14,3 +16,16 @@ bank:
 westpac:
   bank_account_regex: \d{12}|\d{14}
   import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
+
+fiat_email:
+  server: 'smtp.gmail.com'
+  port: 587
+  domain: 'gmail.com'
+  username: 'roger.yuan.fang@gmail.com'
+  password: '80576755itcfzyy'
+  from: 'roger.yuan.fang@gmail.com'
+  from_alias: 'Fiat Mail'
+  subject: "Bank statement Import Result"
+  starttls: true
+  body: 'Please find the attachment.'
+  admin_email: ['dev@acx.io', 'devops@foxmail.com']

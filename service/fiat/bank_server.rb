@@ -5,6 +5,7 @@ require 'codecal'
 require 'active_record'
 require 'enumerize'
 
+require 'paper_trail'
 require './app/models/application_record'
 Dir['./app/models/*.rb'].each {|file| require file }
 Dir['./app/models/payments/*.rb'].each {|file| require file }
@@ -12,10 +13,9 @@ require_relative '../../util/error_handler'
 require_relative '../../db/data_accessor.rb'
 
 class BankServer
-  def initialize(fiat_config, logger, currency)
+  def initialize(fiat_config, logger)
     @fiat_config = fiat_config
     @logger = logger
-    @currency = currency
   end
 
   #
@@ -26,8 +26,8 @@ class BankServer
   #
   # return : string  - customer deposit code
   #
-  def getcustomercode(account_id, currency)
-    result = Codecal.bank_customer_code_generate(account_id, currency)
+  def getcustomercode(account_id)
+    result = Codecal.simple_code_generate(account_id)
     raise CodecalRPCError, result[:error] if result[:error]
     result[:customer_code]   #Customer Code
   end
@@ -46,9 +46,9 @@ class BankServer
   #   ismine => <ismine>     : boolean  - true if this 'customer deposit code' is mine
   # }
   #
-  def validatecustomercode(customer_code, account_id, currency)
-    valid = Codecal.validate_bank_customer_code(customer_code)
-    check_result = getcustomercode(account_id, currency) if valid
+  def validatecustomercode(customer_code, account_id)
+    valid = Codecal.validate_simple_code(customer_code)
+    check_result = getcustomercode(account_id) if valid
     {isvalid: valid, ismine: check_result ? check_result==customer_code : false}
   end
 
@@ -64,21 +64,8 @@ class BankServer
   def autodeposit(params)
     payment_id = params["payment_id"]
     response = {log: true, payment_id: payment_id}
-    unless params["error"]
-      deposit_remote = params["deposit"]
-      response[:deposit_id] = deposit_remote["deposit_id"]
-      payment = Payment.find(payment_id)
-      deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
-      if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
-        deposit.set_values(deposit_remote)
-        deposit.save
-        deposit = Deposit.find(deposit.id)
-        payment.deposit(deposit, deposit_remote["error"])
-        response[:success] = true
-      else
-        response[:success] = false
-        response[:error] = "deposit already done"
-      end
+    if !params["error"] && params["deposit"]
+      pair_deposit_to_payment(params["deposit"], response)
     else
       payment = Payment.find(payment_id)
       payment.error_info = params["error"]
@@ -90,7 +77,12 @@ class BankServer
   end
 
   def resend
-    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < 4', Time.now.utc - @fiat_config[:resend_lag].minutes).inject(0) do |count, payment|
+    Payment.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |payment|
+      payment.result = :error
+      payment.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
+      payment.save
+    end
+    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, payment|
       response = {"command": "reconcile", "payment": payment}
       AMQPQueue.enqueue(response)
       @logger.debug "resent :#{response}"
@@ -98,6 +90,24 @@ class BankServer
       payment.save
       count += 1
     end
+  end
+
+  def update_send_single_payment(id, params)
+    payment = Payment.find(id)
+    if payment.mend_error(params)
+      send_payments([payment])
+    else
+      raise "saving payment(#{id}) error: '#{payment.errors.messages}'"
+    end
+  end
+
+  def send_single_payment(id)
+    payment = Payment.find(id)
+    send_payments([payment])
+  end
+
+  def get_payment(id)
+    payment = Payment.find(id)
   end
 
   def sync_bank_accounts
@@ -129,6 +139,39 @@ class BankServer
 
     File.write("./config/fund_source.yml", hash.to_yaml)
     return response = {log: true, result: "bank accounts refreshed"}
+  end
+
+  private 
+
+  def pair_deposit_to_payment(deposit_remote, response)
+    response[:deposit_id] = deposit_remote["deposit_id"]
+    payment = Payment.find(response[:payment_id])
+    deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
+    if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
+      deposit.set_values(deposit_remote)
+      if deposit.save
+        payment.deposit(deposit, deposit_remote["error"])
+        response[:success] = true
+      else
+        response[:success] = false
+        response[:error] = deposit.errors.messages
+      end
+    else
+      response[:success] = false
+      response[:error] = "deposit already done"
+    end
+  end
+
+  def send_payments(payments)
+    payments.each do |payment|
+      response = {"command": "reconcile", "payment": payment}
+      AMQPQueue.enqueue(response)
+      @logger.debug "sent :#{response}"
+      unless payment.status_sent?
+        payment.status = :sent
+        payment.save
+      end
+    end
   end
 
 end

@@ -89,10 +89,11 @@ module Fiat
         @column_names ||= row.headers
         add_hash = {source_type: @source_type}
         add_hash.merge!(currency: @currency) if !row.to_h.has_key?(:currency) && @currency
-        add_hash.merge!(bank_account: @bank_account["bsb"] + @bank_account["account_number"]) if !row.to_h.has_key?(:currency) && @bank_account
+        add_hash.merge!(bank_account: @bank_account["bsb"] + @bank_account["account_number"]) if !row.to_h.has_key?(:bank_account) && @bank_account
         @payments.push(row.to_h.merge!(add_hash) )
       end
       @read_size = @payments.size
+      raise "There is no payment in the csv file" if @read_size == 0
     end
 
     # save to payments table
