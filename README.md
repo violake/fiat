@@ -60,6 +60,8 @@ fiat.yml
   resend_times: 3                   -- limitation for resend times
   rails_env: "development"          -- for fiat daemon to start normally in development mode
   bank_accounts_filter: ["honesty_point", "acceptable_amount"]  -- filter for bank accounts' detail
+  customer_code_mask: "pgh27fds8i"  -- for fiat generate customer code with this mask
+  customer_code_regex: '[\d]{1}[a-z0-9]{5,11}'  -- for fiat to match the customer code from bank description
 
 rabbitmq.yml    -- username, password, queue's names for fiat to use RabbitMQ server
 

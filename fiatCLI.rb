@@ -69,7 +69,7 @@ class FiatCLI < Thor
   method_option :description, aliases: '-d', type: :string, required: false, desc: "description for this payment."
   def updatePayment(id)
     raise "needs at least one option for this command. -a / -c " if options.size == 0
-    raise "customer code invalid '#{options[:customer_code]}'" if options[:customer_code] && !Codecal.validate_simple_code(options[:customer_code] )
+    raise "customer code invalid '#{options[:customer_code]}'" if options[:customer_code] && !Codecal.validate_masked_code(@fiat_config[:fiat][:customer_code_mask], options[:customer_code] )
     params = convert_to_hash(options)
     if params[:bank_account]
       bank_account = get_bank_account_detail(params[:bank_account])
