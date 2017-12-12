@@ -1,4 +1,6 @@
 require 'codecal'
+require_relative '../../../config/fiat_config'
+
 module Fiat
 
   class Bank < Payment
@@ -32,8 +34,8 @@ module Fiat
       self.description = bank[:description]
       self.sender_info = bank[:sender_info]
       self.status = :new
-      customer_code = bank[:description].gsub(/\s+/, "").match(/[\d]{2,10}/) if bank[:description]
-      self.customer_code = customer_code && Codecal.validate_simple_code(customer_code[0].to_s) ? customer_code[0] : nil
+      customer_code = %r[#{FiatConfig.new[:fiat][:customer_code_regex]}].match(bank[:description]).to_s if bank[:description]
+      self.customer_code = customer_code.size > 0 && Codecal.validate_masked_code(FiatConfig.new[:fiat][:customer_code_mask] ,customer_code) ? customer_code : nil
       self.customer_code == nil ? self.result = :error : self.result = :unreconciled
       self.error_info = nil
       self.error_info = "missing customer deposit code" if self.result == :error

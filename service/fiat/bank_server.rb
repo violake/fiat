@@ -27,7 +27,7 @@ class BankServer
   # return : string  - customer deposit code
   #
   def getcustomercode(account_id)
-    result = Codecal.simple_code_generate(account_id)
+    result = Codecal.code_generate_with_mask(@fiat_config[:customer_code_mask], account_id)
     raise CodecalRPCError, result[:error] if result[:error]
     result[:customer_code]   #Customer Code
   end
@@ -47,7 +47,7 @@ class BankServer
   # }
   #
   def validatecustomercode(customer_code, account_id)
-    valid = Codecal.validate_simple_code(customer_code)
+    valid = Codecal.validate_masked_code(@fiat_config[:customer_code_mask], customer_code)
     check_result = getcustomercode(account_id) if valid
     {isvalid: valid, ismine: check_result ? check_result==customer_code : false}
   end
