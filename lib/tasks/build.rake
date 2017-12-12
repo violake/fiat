@@ -17,7 +17,7 @@ Rake::PackageTask.new(:fiat, version) do |p|
   desc "Copy source files"
   task :source, [BUILD_DIR] do |t, args|
     cp Dir['*.rb'],"#{p.package_dir_path}" 
-    cp_r ['app', 'bin', 'config', 'contribs', 'db', 'lib', 'public', 'service', 'util', 'Rakefile', 'Gemfile', 'Gemfile.lock',  'config.ru', 'grab.sh'], "#{p.package_dir_path}"
+    cp_r ['app', 'bin', 'config', 'db', 'lib', 'public', 'service', 'util', 'Rakefile', 'Gemfile', 'Gemfile.lock',  'config.ru', 'grab.sh'], "#{p.package_dir_path}"
     mkdir_p "#{p.package_dir_path}/vendor"
     File.write("#{p.package_dir_path}/version", version)
   end
