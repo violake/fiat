@@ -39,7 +39,7 @@ params = {
 
     ####  customizedfull path required  ###########################################
     "customized_local_project_path"  : "",
-    "customized_local_release_path"  : "",
+    "customized_local_release_path"  : os.path.join(os.getcwd(), "releases"),
     "customized_remote_install_path" : "",
     "customized_remote_shared_path"  : "",
     "customized_remote_current_path" : "",
