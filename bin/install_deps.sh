@@ -1,3 +1,3 @@
 #!/bin/sh
 
-fab -H $1 install_deps
+bundle install --path=vendor/bundle
