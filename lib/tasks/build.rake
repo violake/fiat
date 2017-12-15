@@ -1,6 +1,6 @@
 require 'rake/packagetask'
 
-BUILD_DIR = "release"
+BUILD_DIR = "releases"
 QUIET = {verbose: false}
 
 task :source => BUILD_DIR
