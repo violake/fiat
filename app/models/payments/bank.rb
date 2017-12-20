@@ -34,7 +34,7 @@ module Fiat
       self.description = bank[:description]
       self.sender_info = bank[:sender_info]
       self.status = :new
-      customer_code = %r[#{FiatConfig.new[:fiat][:customer_code_regex]}].match(bank[:description]).to_s if bank[:description]
+      customer_code = %r[#{FiatConfig.new[:fiat][:customer_code_regex]}].match(bank[:description]).to_s.downcase if bank[:description]
       self.customer_code = customer_code.size > 0 && Codecal.validate_masked_code(FiatConfig.new[:fiat][:customer_code_mask] ,customer_code) ? customer_code : nil
       self.customer_code == nil ? self.result = :error : self.result = :unreconciled
       self.error_info = nil
