@@ -11,7 +11,7 @@ fiat: &default
   rails_env: "development"
   bank_accounts_filter: ["honesty_point", "acceptable_amount"]
   customer_code_mask: "pgh27fds8i"
-  customer_code_regex: '[\d]{1}[a-z0-9]{5,11}'
+  customer_code_regex: '[\d]{1}[A-Za-z0-9]{5,11}'
 
 bank:
   <<: *default
