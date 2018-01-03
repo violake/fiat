@@ -34,8 +34,7 @@ module Fiat
       self.description = bank[:description]
       self.sender_info = bank[:sender_info]
       self.status = :new
-      customer_code = %r[#{FiatConfig.new[:fiat][:customer_code_regex]}].match(bank[:description]).to_s.downcase if bank[:description]
-      self.customer_code = customer_code.size > 0 && Codecal.validate_masked_code(FiatConfig.new[:fiat][:customer_code_mask] ,customer_code) ? customer_code : nil
+      self.customer_code = capture_customer_code(bank[:description])
       self.customer_code == nil ? self.result = :error : self.result = :unreconciled
       self.error_info = nil
       self.error_info = "missing customer deposit code" if self.result == :error
@@ -52,6 +51,19 @@ module Fiat
         self.error_info = "This code could be a deposit id. It needs to be manually handled."
         self.result = :error
       end
+    end
+
+    private
+
+    def capture_customer_code(description)
+      customer_code = nil
+      description.scan(%r[#{FiatConfig.new[:fiat][:customer_code_regex]}]).each do |code|
+        if Codecal.validate_masked_code(FiatConfig.new[:fiat][:customer_code_mask], code.downcase)
+          customer_code = code.downcase
+          return customer_code
+        end
+      end
+      customer_code
     end
   end
 
