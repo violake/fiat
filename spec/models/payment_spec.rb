@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Payment, type: :model do
   let(:payment) { create(:bank) }
+  let(:bank) { {created_at: "201708010100"} }
 
   it { should validate_presence_of(:source_id) }
   it { should validate_presence_of(:source_name) }
@@ -13,7 +14,7 @@ RSpec.describe Payment, type: :model do
   it { should validate_uniqueness_of(:txid) }
 
   describe "convert timezone for bank" do
-    it "convert when no timezone(-) given" do
+    it "convert when timezone(-) given" do
       params = {
                 source_id: 1, 
                 source_name: "f", 
@@ -34,7 +35,7 @@ RSpec.describe Payment, type: :model do
       expect(Time.zone.utc_offset).to eq(0)
     end
 
-    it "convert when no timezone(+) given" do
+    it "convert when timezone(+) given" do
       params = {
                 source_id: 1, 
                 source_name: "f", 
@@ -61,6 +62,40 @@ RSpec.describe Payment, type: :model do
 
     it "do not convert when timezone is local" do
 
+    end
+  end
+
+  describe "capture customer code" do
+    it "return correct code when one code given" do
+      bank[:description] = "Direct Credit Go MEACHAM 3c3k37"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq("3c3k37")
+    end
+
+    it "return correct upcase code when one code given" do
+      bank[:description] = "Direct Credit Go MEACHAM 3C3K37"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq("3c3k37")
+    end
+
+    it "return correct code when one correct code and one error code given" do
+      bank[:description] = "Direct Credit Go MEACHAM 3d2343 3c3k37"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq("3c3k37")
+
+      bank[:description] = "Direct Credit Go MEACHAM 3c3k37 3d2343"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq("3c3k37")
+    end
+
+    it "return nil when error code given" do
+      bank[:description] = "Direct Credit Go MEACHAM 3d2343"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq(nil)
+
+      bank[:description] = "Direct Credit Go MEACHAM 3d2343 6flkjdfha"
+      payment.set_values(bank)
+      expect(payment.customer_code).to eq(nil)
     end
   end
 
