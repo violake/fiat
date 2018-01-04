@@ -1,4 +1,7 @@
+require './util/timezone'
+
 class Payment < ApplicationRecord
+  extend Fiat::Timezone
   has_paper_trail
 
   STATUS = [:new, :sent, :archived]
@@ -12,24 +15,6 @@ class Payment < ApplicationRecord
   validates_presence_of :source_id, :source_name, :source_code, :payment_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
   validates :txid, uniqueness: true, allow_nil: true
-
-  @@local = nil
-
-  def self.set_timezone(timezone)
-    regex = /^[+\-](0\d|1[0-2]):([0-5]\d)$/
-    return timezone unless regex.match(timezone)
-    zone = timezone.split(":")
-    @@local = Time.zone
-    Time.zone = (zone[0] + "." + ((zone[1].to_f)/60*100).to_i.to_s).to_f.hours
-  end
-
-  def self.timezone_reset
-    Time.zone = @@local
-  end
-
-  def self.timezone_changed?
-    @@local ? true : false
-  end
 
   def self.get_daily_sum(start_date, end_date, currency, bank_account = nil)
     c = self.connection

@@ -62,7 +62,7 @@ module Fiat
         @result
       rescue Exception=>e
         puts e.message
-        #puts e.backtrace.inspect
+        puts e.backtrace.inspect
       ensure
         Payment.timezone_reset if Payment.timezone_changed?
       end
