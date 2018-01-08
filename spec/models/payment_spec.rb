@@ -1,7 +1,9 @@
 require 'rails_helper'
+require './app/services/transaction_import.rb'
 
 RSpec.describe Payment, type: :model do
   let(:payment) { create(:bank) }
+  let(:transactionImport) { }
   let(:bank) { {created_at: "201708010100"} }
 
   it { should validate_presence_of(:source_id) }
@@ -14,7 +16,21 @@ RSpec.describe Payment, type: :model do
   it { should validate_uniqueness_of(:txid) }
 
   describe "convert timezone for bank" do
+
+    it "do not convert when error timezone given" do
+      ts = Fiat::TransactionImport.new 
+
+      response = ts.set_timezone("+15:00")
+      expect(Time.zone.utc_offset).to eq(0)
+      expect(response).to eq("+15:00")
+
+      response = ts.set_timezone("fdsa")
+      expect(Time.zone.utc_offset).to eq(0)
+      expect(response).to eq("fdsa")
+    end
+
     it "convert when timezone(-) given" do
+      ts = Fiat::TransactionImport.new 
       params = {
                 source_id: 1, 
                 source_name: "f", 
@@ -26,16 +42,17 @@ RSpec.describe Payment, type: :model do
                 created_at: "201708010100",
                 updated_at: "201708010300"
                }
-      Payment.set_timezone("-03:00")
+      ts.set_timezone("-03:00")
       expect(Time.zone.utc_offset).to eq(-10800)
       payment.set_values(params)
       expect(payment.created_at).to eq("2017-08-01 04:00:00 UTC")
       expect(payment.updated_at).to eq("2017-08-01 06:00:00 UTC")
-      Payment.timezone_reset
+      ts.timezone_reset
       expect(Time.zone.utc_offset).to eq(0)
     end
 
     it "convert when timezone(+) given" do
+      ts = Fiat::TransactionImport.new 
       params = {
                 source_id: 1, 
                 source_name: "f", 
@@ -47,12 +64,12 @@ RSpec.describe Payment, type: :model do
                 created_at: "201708010100",
                 updated_at: "201708010300"
                }
-      Payment.set_timezone("+03:00")
+      ts.set_timezone("+03:00")
       expect(Time.zone.utc_offset).to eq(10800)
       payment.set_values(params)
       expect(payment.created_at).to eq("2017-07-31 22:00:00 UTC")
       expect(payment.updated_at).to eq("2017-08-01 00:00:00 UTC")
-      Payment.timezone_reset
+      ts.timezone_reset
       expect(Time.zone.utc_offset).to eq(0)
     end
 

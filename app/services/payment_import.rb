@@ -3,12 +3,13 @@ Dir['./app/models/*.rb'].each {|file| require file }
 Dir['./app/models/payments/*.rb'].each {|file| require file }
 require './service/amqp_queue'
 require './config/fiat_config'
+require './app/services/transaction_import'
 
 module Fiat
 
-  class PaymentImport
-    include Fiat::Validation
+  class PaymentImport < TransactionImport
 
+    PAYMENT_MODULE = "Fiat::Payments"
     ## import payments called by payment_controller
     #  [params]
     #    payments    : Tempfile
@@ -22,20 +23,16 @@ module Fiat
     ##
     def importPayments(params)
       begin
+        @module = PAYMENT_MODULE
         @csv_path = params[:payments].tempfile
-        @source_type = params[:source_type]
-        @currency = params[:currency]
-        @bank_account = params[:bank_account]
-        Payment.set_timezone(params[:timezone])
-        readcsv
-        check
-        save
-        send_to_acx
+        set_timezone(params[:timezone])
+        transaction_import(params)
         return true, @result
       rescue Exception=>e
-        return false, e.message
+        error_msg = e.message.start_with?("Illegal quoting") ?  "Error Type of File: File should be csv" : e.message
+        return false, error_msg
       ensure
-        Payment.timezone_reset if Payment.timezone_changed?
+        timezone_reset if timezone_changed?
       end
     end
 
@@ -49,22 +46,18 @@ module Fiat
     ##
     def importPaymentsFile(file, params)
       begin
+        @module = PAYMENT_MODULE
         raise "no source file" unless file
+        set_timezone(params[:timezone])
         @csv_path = File.expand_path(file)
-        @source_type = params[:source_type]
-        @currency = params[:currency]
-        @bank_account = params[:bank_account]
-        Payment.set_timezone(params[:timezone])
-        readcsv
-        check
-        save
-        send_to_acx
+        transaction_import(params)
         @result
       rescue Exception=>e
-        puts e.message
+        error_msg = e.message.start_with?("Illegal quoting") ?  "Error Type of File: File should be csv" : e.message
+        puts error_msg
         puts e.backtrace.inspect
       ensure
-        Payment.timezone_reset if Payment.timezone_changed?
+        timezone_reset if timezone_changed?
       end
     end
 
@@ -77,43 +70,6 @@ module Fiat
       payment.save
     end
 
-    private
-
-    def readcsv
-      @payments = []
-      CSV.foreach(@csv_path,
-        :quote_char=>'"',
-        :col_sep =>",", 
-        :headers => true, 
-        :header_converters => :symbol ) do |row|
-        @column_names ||= row.headers
-        add_hash = {source_type: @source_type}
-        add_hash.merge!(currency: @currency) if !row.to_h.has_key?(:currency) && @currency
-        add_hash.merge!(bank_account: @bank_account["bsb"] + @bank_account["account_number"]) if !row.to_h.has_key?(:bank_account) && @bank_account
-        @payments.push(row.to_h.merge!(add_hash) )
-      end
-      @read_size = @payments.size
-      raise "There is no payment in the csv file" if @read_size == 0
-    end
-
-    # save to payments table
-    def save
-      payclass = Fiat.const_get(@source_type.capitalize)
-      raise "payment type unknown ! '#{payment[:payment_type]}' " unless payclass
-      @result = payclass.import(@payments)
-      @result[:filtered] = @read_size - @payments.size
-    end
-
-    # send payment with customer_code to rabbitmq server
-    def send_to_acx
-      @result[:sent] = Payment.with_status(:new).with_result(:unreconciled).inject(0) do |count, payment|
-        response = {"command": "reconcile", "payment": payment}
-        AMQPQueue.enqueue(response)
-        payment.status = :sent
-        payment.send_times += 1
-        payment.save
-        count += 1
-      end
-    end
   end
+
 end

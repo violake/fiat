@@ -1,7 +1,4 @@
-require './util/timezone'
-
 class Payment < ApplicationRecord
-  extend Fiat::Timezone
   has_paper_trail
 
   STATUS = [:new, :sent, :archived]

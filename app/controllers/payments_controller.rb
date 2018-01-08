@@ -5,21 +5,27 @@ require_relative '../services/validation'
 class PaymentsController < ApplicationController
   before_action :auth_member!
   before_action :set_payment, only: [:show, :update, :force_reconcile]
-  CONFIG = Rails.application.config_for(:fiat)
+  CONFIG = FiatConfig.new
   # POST /payments
   def import
     uploaded_io = params[:payments]
+    
     if !uploaded_io || uploaded_io.tempfile.class != Tempfile
       json_response( { payments: ['no file uploaded']} , 400)
     elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
       json_response( { timezone: ["no timezone or error format eg: '+03:00' "]} , 400)
-    #elsif !params[:bank_account] || ! bank_accounts_include?(params[:bank_account])
-    #  json_response( { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]} , 400)
-    elsif !params[:source_type] || ! source_types_include?(params[:source_type])
-      json_response( { source_type: ["source type undefined : '#{params[:source_type]}' "]} , 400)
+    elsif !params[:bank_account]
+      json_response( { bank_account: ["no bank account or error "]} , 400)
     else
-      success, result = Fiat::PaymentImport.new.importPayments(params)
-      json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400) 
+      bank_account = get_bankaccount(params[:bank_account], params)
+      if bank_account
+        params[:bank_account] = bank_account
+        params[:source_type] = bank_account["bank"].split(' ').shift.downcase
+        success, result = Fiat::PaymentImport.new.importPayments(params)
+        json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400) 
+      else
+        json_response( { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]} , 400)
+      end
     end
   end
 
@@ -44,11 +50,11 @@ class PaymentsController < ApplicationController
   end
 
   def archive
-    if search_params[:archive_before] && Time.zone.parse(search_params[:archive_before]) < Time.zone.now - CONFIG["archive_limit"].days
+    if search_params[:archive_before] && Time.zone.parse(search_params[:archive_before]) < Time.zone.now - CONFIG[:fiat][:archive_limit].days
       @payments = Payment.with_status(:sent).where('created_at < ?', search_params[:archive_before]).each { |payment| payment.archive!}
       json_response( {archived: @payments.size}, 200)
     else
-      json_response( {base: ["Please select a date and only record which is #{CONFIG["archive_limit"]} days before can be archived"]}, 400 )
+      json_response( {base: ["Please select a date and only record which is #{CONFIG[:fiat][:archive_limit]} days before can be archived"]}, 400 )
     end
   end
 
@@ -77,7 +83,7 @@ class PaymentsController < ApplicationController
     @payments = Payment.all.order(id: :desc)
     @payments = @payments.with_result(search_params[:result]) if search_params[:result]
     @payments = @payments.with_status(search_params[:status]) if search_params[:status]
-    @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG["search_day_diff"].days,search_params[:created_at]) if search_params[:created_at]
+    @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days,search_params[:created_at]) if search_params[:created_at]
   end
 
   def valid_search_params
@@ -118,24 +124,25 @@ class PaymentsController < ApplicationController
     end
   end
 
+  # no longer needed
   def source_types_include?(source_type)
     Fiat::FUND_TYPE.include?(source_type)
   end
 
-  def bank_accounts_include?(bank_account)
-    @@bank_accounts ||= FiatConfig.new[:bank_accounts]
-    @@bank_accounts.inject(false) do |match, b|
-      return match if match
-      bank_account.keys.each do |key|
-        if bank_account[key] == b[key]
-          match = true
-        else
-          match = false
+  def get_bankaccount(bank_account, params=nil)
+    b_account = nil
+    return nil unless CONFIG[:fiat_accounts]
+    CONFIG[:fiat_accounts].to_hash.each do |currency, accounts|
+      return nil unless accounts
+      accounts.each { |k, v| break if b_account ;v.each do |account|
+        if account["bsb"] == bank_account.split("-")[0] && account["account_number"] == bank_account.split("-")[1]
+          b_account = account.select {|key, _| not CONFIG[:fiat][:bank_accounts_filter].include? key}
+          params[:currency] ||= currency if params
           break
         end
-      end
-      match
+      end }
     end
+    b_account
   end
 
   def payment_params

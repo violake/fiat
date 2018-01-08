@@ -74,7 +74,7 @@ module Fiat
       # check data that daily sum > it in database and import additional data if fully matched
       ps.map do |account,date|
         date.map do |day, westpacs|
-          daily = Westpac.get_sum_by_ids(westpacs)
+          daily = Fiat::Payments::Westpac.get_sum_by_ids(westpacs)
           if sums[account][day] && daily[:daily_sum] == sums[account][day]
             ps[account][day].delete_if do |westpac|
               daily[:daily_ids].include?(Westpac.generate_id(westpac).to_s)

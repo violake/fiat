@@ -18,7 +18,7 @@ require "yaml"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module FiatWithUi
+module Fiat
   class Application < Rails::Application
 
     filename = Rails.root.join('config', "application.yml")

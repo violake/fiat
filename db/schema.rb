@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171116053232) do
+ActiveRecord::Schema.define(version: 20180103042617) do
 
   create_table "deposits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "account_id"
@@ -57,6 +57,29 @@ ActiveRecord::Schema.define(version: 20171116053232) do
     t.integer "send_times", default: 0
     t.string "source_type"
     t.integer "reject_times", default: 0
+  end
+
+  create_table "transfers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "source_id"
+    t.string "source_name"
+    t.string "source_code"
+    t.string "country", limit: 100
+    t.string "transaction_type", limit: 50
+    t.decimal "amount", precision: 32, scale: 16
+    t.string "currency", limit: 50
+    t.string "withdraw_ids", limit: 100
+    t.string "customer_code", limit: 100
+    t.string "result", limit: 30
+    t.string "status", limit: 30
+    t.datetime "matched_at"
+    t.string "txid"
+    t.text "description"
+    t.text "error_info", limit: 255
+    t.integer "send_times", default: 0
+    t.string "source_type", limit: 50
+    t.integer "reject_times", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "versions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
