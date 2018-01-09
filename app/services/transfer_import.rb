@@ -19,17 +19,18 @@ module Fiat
     ##
     def importTransfersFile(file, params)
       begin
+        @module = TRANSFER_MODULE
         raise "no source file" unless file
-        Transfer.set_timezone(params[:timezone])
+        set_timezone(params[:timezone])
         @csv_path = File.expand_path(file)
-        handle_params(params)
-        fiat_process
+        transaction_import(params)
         @result
       rescue Exception=>e
-        puts e.message
+        error_msg = e.message.start_with?("Illegal quoting") ?  "Error Type of File: File should be csv" : e.message
+        puts error_msg
         puts e.backtrace.inspect
       ensure
-        Transfer.timezone_reset if Transfer.timezone_changed?
+        timezone_reset if timezone_changed?
       end
     end
     

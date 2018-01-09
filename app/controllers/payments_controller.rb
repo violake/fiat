@@ -8,23 +8,12 @@ class PaymentsController < ApplicationController
   CONFIG = FiatConfig.new
   # POST /payments
   def import
-    uploaded_io = params[:payments]
-    
-    if !uploaded_io || uploaded_io.tempfile.class != Tempfile
-      json_response( { payments: ['no file uploaded']} , 400)
-    elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
-      json_response( { timezone: ["no timezone or error format eg: '+03:00' "]} , 400)
-    elsif !params[:bank_account]
-      json_response( { bank_account: ["no bank account or error "]} , 400)
-    else
-      bank_account = get_bankaccount(params[:bank_account], params)
-      if bank_account
-        params[:bank_account] = bank_account
-        params[:source_type] = bank_account["bank"].split(' ').shift.downcase
-        success, result = Fiat::PaymentImport.new.importPayments(params)
-        json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400) 
+      valid = valid_import_params
+      if valid.is_a? (Hash)
+        json_response( valid , 400)
       else
-        json_response( { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]} , 400)
+        success, result = Fiat::PaymentImport.new.importPayments(params)
+        json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
       end
     end
   end
@@ -86,8 +75,29 @@ class PaymentsController < ApplicationController
     @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days,search_params[:created_at]) if search_params[:created_at]
   end
 
+  def valid_import_params
+    uploaded_io = params[:payments]
+    
+    if !uploaded_io || uploaded_io.tempfile.class != Tempfile
+      { payments: ['no file uploaded']}
+    elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
+      { timezone: ["no timezone or error format eg: '+03:00' "]}
+    elsif !params[:bank_account]
+      { bank_account: ["no bank account or error "]}
+    else
+      bank_account = get_bankaccount(params[:bank_account], params)
+      if bank_account
+        params[:bank_account] = bank_account
+        params[:source_type] = bank_account["bank"].split(' ').shift.downcase
+        nil
+      else
+        { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]}
+      end
+    end
+  end
+
   def valid_search_params
-  search_params.to_h.inject({}) do |messages, (k, v)|
+    search_params.to_h.inject({}) do |messages, (k, v)|
       if v
         case k
         when "page_num"
