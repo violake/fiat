@@ -72,7 +72,11 @@ class PaymentsController < ApplicationController
     @payments = Payment.all.order(id: :desc)
     @payments = @payments.with_result(search_params[:result]) if search_params[:result]
     @payments = @payments.with_status(search_params[:status]) if search_params[:status]
-    @payments = @payments.where('created_at > ? and created_at < ?', Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days,search_params[:created_at]) if search_params[:created_at]
+    payments_date_inteval(Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days, search_params[:created_at]) if search_params[:created_at]
+  end
+
+  def payments_date_inteval(start_at, end_at)
+    @payments = @payments.where('created_at > ? and created_at < ?', start_at, end_at)
   end
 
   def valid_import_params
