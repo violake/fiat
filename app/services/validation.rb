@@ -21,7 +21,7 @@ module Fiat
       if @source_type == nil || @source_type == "" || !("Fiat::"+self.class.to_s.split("::").last.upcase+"_TYPE").constantize.include?(@source_type)
         import_failed "source type unknow '#{@source_type}' !!"
       end
-      validate_class = @module.const_get("#{@source_type.capitalize}Validation")
+      validate_class = @module.constantize.const_get("#{@source_type.capitalize}Validation")
       missing = validate_class.check_columnname(@column_names)
       import_failed "column missing - [#{missing.to_a.join(",")}]" if missing.size > 0
 

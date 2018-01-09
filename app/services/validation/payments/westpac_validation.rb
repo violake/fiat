@@ -1,4 +1,4 @@
-require_relative 'base_validation'
+require_relative '../base_validation'
 module Fiat
 
   module Payments

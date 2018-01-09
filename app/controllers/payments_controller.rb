@@ -8,13 +8,12 @@ class PaymentsController < ApplicationController
   CONFIG = FiatConfig.new
   # POST /payments
   def import
-      valid = valid_import_params
-      if valid.is_a? (Hash)
-        json_response( valid , 400)
-      else
-        success, result = Fiat::PaymentImport.new.importPayments(params)
-        json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
-      end
+    valid = valid_import_params
+    if valid.is_a? (Hash)
+      json_response( valid , 400)
+    else
+      success, result = Fiat::PaymentImport.new.importPayments(params)
+      json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
     end
   end
 
