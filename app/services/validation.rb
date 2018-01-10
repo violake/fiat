@@ -1,9 +1,9 @@
-Dir[File.dirname(__FILE__) + '/validation/payments/*.rb'].each {|file| require file }
-Dir[File.dirname(__FILE__) + '/validation/transfers/*.rb'].each {|file| require file }
+Dir[File.dirname(__FILE__) + '/validation/transfer_ins/*.rb'].each {|file| require file }
+Dir[File.dirname(__FILE__) + '/validation/transfer_outs/*.rb'].each {|file| require file }
 
 module Fiat
-  PAYMENTIMPORT_TYPE = Dir["app/models/payments/*.rb"].map!{|file| file.split("/").last.split(".").first }
-  TRANSFERIMPORT_TYPE = Dir["app/models/transfers/*.rb"].map!{|file| file.split("/").last.split(".").first }
+  TRANSFERINIMPORT_TYPE = Dir["app/models/transfer_ins/*.rb"].map!{|file| file.split("/").last.split(".").first }
+  TRANSFEROUTIMPORT_TYPE = Dir["app/models/transfer_outs/*.rb"].map!{|file| file.split("/").last.split(".").first }
 
   module Validation
 

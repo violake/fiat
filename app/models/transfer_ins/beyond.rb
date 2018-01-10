@@ -2,7 +2,7 @@ require_relative 'westpac'
 
 module Fiat
 
-  module Payments
+  module TransferIns
     
     class Beyond < Westpac
       
@@ -12,7 +12,7 @@ module Fiat
         bank[:source_name] = "Beyond Bank Statement"
         bank[:source_code] = westpac[:bank_account].to_json
         bank[:country] = "Australia"
-        bank[:payment_type] = "Bank"
+        bank[:transfer_type] = "Bank"
         bank[:amount] = westpac[:credit_amount]
         bank[:currency] = westpac[:currency]
         bank[:created_at] = westpac[:date]

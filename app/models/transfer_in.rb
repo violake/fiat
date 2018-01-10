@@ -1,4 +1,4 @@
-class Payment < ApplicationRecord
+class TransferIn < ApplicationRecord
   has_paper_trail
 
   STATUS = [:new, :sent, :archived]
@@ -9,7 +9,7 @@ class Payment < ApplicationRecord
   enumerize :status, in: STATUS, scope: true, predicates: { prefix: true }
   enumerize :result, in: RESULT, scope: true, predicates: { prefix: true }
 
-  validates_presence_of :source_id, :source_name, :source_code, :payment_type, :amount, :currency
+  validates_presence_of :source_id, :source_name, :source_code, :transfer_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
   validates :txid, uniqueness: true, allow_nil: true
 
@@ -17,12 +17,12 @@ class Payment < ApplicationRecord
     c = self.connection
     source_code_str = bank_account ? "and source_code like '%#{bank_account[0..5]}%' and source_code like '%#{bank_account[6..-1]}%'" : ""
     results = c.execute("select a.source_code, a.amount, IFNULL(b.amount,0) as reconciled_amount, a.date, a.currency from " \
-                        "(select source_code, sum(IFNULL(amount, 0)) as amount, DATE(created_at) as date, currency from payments " \
+                        "(select source_code, sum(IFNULL(amount, 0)) as amount, DATE(created_at) as date, currency from transfer_ins " \
                         "where DATE(created_at) between #{start_date} and #{end_date} " \
                         "and currency = '#{currency}'" \
                         "#{source_code_str} " \
                         "group by source_code, currency, DATE(created_at) ) a left outer join " \
-                        "(select source_code, sum(IFNULL(amount, 0)) as amount, DATE(created_at) as date, currency from payments " \
+                        "(select source_code, sum(IFNULL(amount, 0)) as amount, DATE(created_at) as date, currency from transfer_ins " \
                         "where DATE(created_at) between #{start_date} and #{end_date} " \
                         "and currency = '#{currency}'" \
                         "#{source_code_str} " \
@@ -52,7 +52,7 @@ class Payment < ApplicationRecord
       self.error_info = nil
       self.save
     else
-      self.errors[:base] << "payment result is not 'error'!"
+      self.errors[:base] << "transfer-in result is not 'error'!"
       return false
     end
   end
@@ -81,7 +81,7 @@ class Payment < ApplicationRecord
                     source_code
                     source_type
                     country
-                    payment_type
+                    transfer_type
                     amount
                     currency
                     deposit_id
@@ -100,8 +100,8 @@ class Payment < ApplicationRecord
     CSV.generate(headers: true, force_quotes: true) do |csv|
       csv << attributes
 
-      all.each do |payment|
-        csv << attributes.map{ |attr| payment.send(attr) }
+      all.each do |transfer|
+        csv << attributes.map{ |attr| transfer.send(attr) }
       end
     end
   end

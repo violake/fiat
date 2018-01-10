@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180103042617) do
+ActiveRecord::Schema.define(version: 20180110032917) do
 
   create_table "deposits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "account_id"
@@ -29,16 +29,16 @@ ActiveRecord::Schema.define(version: 20180103042617) do
     t.datetime "done_at"
     t.string "confirmations"
     t.string "type"
-    t.integer "payment_transaction_id"
+    t.integer "transfer_in_id"
     t.integer "txout"
   end
 
-  create_table "payments", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+  create_table "transfer_ins", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "source_id"
     t.string "source_name"
     t.string "source_code"
     t.string "country", limit: 100
-    t.string "payment_type", limit: 50
+    t.string "transfer_type", limit: 50
     t.decimal "amount", precision: 32, scale: 16
     t.string "currency", limit: 50
     t.integer "deposit_id"
@@ -59,12 +59,12 @@ ActiveRecord::Schema.define(version: 20180103042617) do
     t.integer "reject_times", default: 0
   end
 
-  create_table "transfers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+  create_table "transfer_outs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "source_id"
     t.string "source_name"
     t.string "source_code"
     t.string "country", limit: 100
-    t.string "transaction_type", limit: 50
+    t.string "transfer_type", limit: 50
     t.decimal "amount", precision: 32, scale: 16
     t.string "currency", limit: 50
     t.string "withdraw_ids", limit: 100

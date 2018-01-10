@@ -1,7 +1,7 @@
 require_relative 'westpac_validation'
 module Fiat
 
-  module Payments
+  module TransferIns
 
     class BeyondValidation < WestpacValidation
 
@@ -11,24 +11,24 @@ module Fiat
         end
       end
 
-      def self.filter(payments)
-        self.validate_by_sum(self.rename_to_westpac(self.filter_positive_amount(payments)))
+      def self.filter(transfers)
+        self.validate_by_sum(self.rename_to_westpac(self.filter_positive_amount(transfers)))
       end
 
       private
       
 
-      def self.filter_positive_amount(payments)
-        payments.inject([]) do |filtered_payments, payment|
-          filtered_payments.push(payment) if payment[:amount].to_i > 0
-          filtered_payments
+      def self.filter_positive_amount(transfers)
+        transfers.inject([]) do |filtered_transfers, transfer|
+          filtered_transfers.push(transfer) if transfer[:amount].to_i > 0
+          filtered_transfers
         end
       end
 
-      def self.rename_to_westpac(payments)
+      def self.rename_to_westpac(transfers)
         maps = {bank_account: :bank_account, entered_date: :date, transaction_description: :narrative, amount: :credit_amount, currency: :currency, source_type: :source_type}
-        payments.map! do |payment|
-          payment = payment.map {|k,v| if maps.has_key?(k) then [maps[k],v] else [k,v] end}.to_h
+        transfers.map! do |transfer|
+          transfer = transfer.map {|k,v| if maps.has_key?(k) then [maps[k],v] else [k,v] end}.to_h
         end
       end
       

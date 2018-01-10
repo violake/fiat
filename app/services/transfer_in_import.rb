@@ -1,18 +1,18 @@
 require_relative 'validation'
 Dir['./app/models/*.rb'].each {|file| require file }
-Dir['./app/models/payments/*.rb'].each {|file| require file }
+Dir['./app/models/transfer_ins/*.rb'].each {|file| require file }
 require './service/amqp_queue'
 require './config/fiat_config'
 require './app/services/transaction_import'
 
 module Fiat
 
-  class PaymentImport < TransactionImport
+  class TransferInImport < TransactionImport
 
-    PAYMENT_MODULE = "Fiat::Payments"
-    ## import payments called by payment_controller
+    TRANSFERIN_MODULE = "Fiat::TransferIns"
+    ## import transfer-ins called by transfer_controller
     #  [params]
-    #    payments    : Tempfile
+    #    transfers    : Tempfile
     #    bank_account: String     -- json string format bank account detail
     #    source_type : String     -- different converter
     #  [return]
@@ -21,10 +21,10 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile read string
     ##
-    def importPayments(params)
+    def importTransferIns(params)
       begin
-        @module = PAYMENT_MODULE
-        @csv_path = params[:payments].tempfile
+        @module = TRANSFERIN_MODULE
+        @csv_path = params[:transfers].tempfile
         set_timezone(params[:timezone])
         transaction_import(params)
         return true, @result
@@ -36,7 +36,7 @@ module Fiat
       end
     end
 
-    ## import payments called by commandline 
+    ## import transfers called by commandline 
     #  [params]
     #  file : String -- file name
     #  [return]
@@ -44,9 +44,9 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile -- read string
     ##
-    def importPaymentsFile(file, params)
+    def importTransferInsFile(file, params)
       begin
-        @module = PAYMENT_MODULE
+        @module = TRANSFERIN_MODULE
         raise "no source file" unless file
         set_timezone(params[:timezone])
         @csv_path = File.expand_path(file)
@@ -62,12 +62,12 @@ module Fiat
     end
 
 
-    def force_reconcile(payment)
-      response = {"command": "force_reconcile", "payment": payment}
+    def force_reconcile(transfer)
+      response = {"command": "force_reconcile", "transfer": transfer}
       AMQPQueue.enqueue(response)
-      payment.status = :sent
-      payment.send_times += 1
-      payment.save
+      transfer.status = :sent
+      transfer.send_times += 1
+      transfer.save
     end
 
   end

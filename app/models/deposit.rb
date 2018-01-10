@@ -19,7 +19,7 @@ class Deposit < ApplicationRecord
     self.done_at = deposit_remote["done_at"]
     self.confirmations = deposit_remote["confirmations"]
     self.type = deposit_remote["type"]
-    self.payment_transaction_id = deposit_remote["payment_transaction_id"]
+    self.transfer_in_id = deposit_remote["transfer_in_id"]
     self.txout = deposit_remote["txout"]
   end
 end

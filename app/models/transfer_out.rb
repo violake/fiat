@@ -1,4 +1,4 @@
-class Transfer < ApplicationRecord
+class TransferOut < ApplicationRecord
  
   STATUS = [:new, :sent, :archived]
   RESULT = [:unreconciled, :reconciled, :error]

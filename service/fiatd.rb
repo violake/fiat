@@ -53,7 +53,7 @@ class Fiatd
   #
   # for future onboard more currencies
   # set @server to different fiat-server
-  # e.g. @server = Server.new(tokens["payment_type"])
+  # e.g. @server = Server.new(tokens["transfer_type"])
   def start
     #raise RemainAlmostDoneError if remain_doing?
     queue = @ch.queue(@fiat_config[:queue][:request][:name], :durable => true)
@@ -64,9 +64,9 @@ class Fiatd
         @logger.debug "request: #{payload}"
         tokens = JSON::parse(payload)
 
-        raise Exception unless tokens["payment_type"]
+        raise Exception unless tokens["transfer_type"]
 
-        @server = @fiat_server.send(tokens["payment_type"].downcase)
+        @server = @fiat_server.send(tokens["transfer_type"].downcase)
 
         response = {
           command: tokens["command"],
@@ -209,11 +209,11 @@ class Fiatd
   #
   # params: hash
   # {
-  #   payment_id : Integer
+  #   transfer_id : Integer
   #   deposit    : Hash
   # }
   #
-  # return: boolean - deposit mapping payment successfully or not
+  # return: boolean - deposit mapping transfer successfully or not
   #
   #
   def cmd_autodeposit params

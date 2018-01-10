@@ -1,88 +1,88 @@
-require_relative '../services/payment_import'
+require_relative '../services/transfer_in_import'
 require_relative '../../config/fiat_config'
 require_relative '../services/validation'
 
-class PaymentsController < ApplicationController
+class TransferInsController < ApplicationController
   before_action :auth_member!
-  before_action :set_payment, only: [:show, :update, :force_reconcile]
+  before_action :set_transfer, only: [:show, :update, :force_reconcile]
   CONFIG = FiatConfig.new
-  # POST /payments
+  # POST /transfers
   def import
     valid = valid_import_params
     if valid.is_a? (Hash)
       json_response( valid , 400)
     else
-      success, result = Fiat::PaymentImport.new.importPayments(params)
+      success, result = Fiat::TransferInImport.new.importTransferIns(params)
       json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
     end
   end
 
 
-  # GET /payments
+  # GET /transfers
   def index
     messages = valid_search_params
     if !messages || messages.size == 0
-      search_payments
-      count = @payments.size
-      @payments = @payments.paginate(page: params[:page_num], per_page: search_params[:per_page])
-      json_response({count: count, data: @payments})
+      search_transfers
+      count = @transfers.size
+      @transfers = @transfers.paginate(page: params[:page_num], per_page: search_params[:per_page])
+      json_response({count: count, data: @transfers})
     else
       json_response(messages, 400)
     end
   end
 
   def export
-    search_payments
-    csv = @payments.to_csv
-    send_data csv, filename: "payments-#{Time.now.strftime('%Y%m%d_%H%M%S')}.csv"
+    search_transfers
+    csv = @transfers.to_csv
+    send_data csv, filename: "transfers-#{Time.now.strftime('%Y%m%d_%H%M%S')}.csv"
   end
 
   def archive
     if search_params[:archive_before] && Time.zone.parse(search_params[:archive_before]) < Time.zone.now - CONFIG[:fiat][:archive_limit].days
-      @payments = Payment.with_status(:sent).where('created_at < ?', search_params[:archive_before]).each { |payment| payment.archive!}
-      json_response( {archived: @payments.size}, 200)
+      @transfers = TransferIn.with_status(:sent).where('created_at < ?', search_params[:archive_before]).each { |transfer| transfer.archive!}
+      json_response( {archived: @transfers.size}, 200)
     else
       json_response( {base: ["Please select a date and only record which is #{CONFIG[:fiat][:archive_limit]} days before can be archived"]}, 400 )
     end
   end
 
-  # GET /payments/:id
+  # GET /transfers/:id
   def show
-    json_response(@payment)
+    json_response(@transfer)
   end
 
-  # PUT /payments/:id
+  # PUT /transfers/:id
   def update
-    @payment.update(payment_params)
+    @transfer.update(transfer_params)
     head :no_content
   end
 
   def force_reconcile
-    Fiat::PaymentImport.new.force_reconcile(@payment)
+    Fiat::TransferInImport.new.force_reconcile(@transfer)
   end
 
   def daily_sum
-    Payment.get_daily_sum()
+    TransferIn.get_daily_sum()
   end
 
   private
 
-  def search_payments
-    @payments = Payment.all.order(id: :desc)
-    @payments = @payments.with_result(search_params[:result]) if search_params[:result]
-    @payments = @payments.with_status(search_params[:status]) if search_params[:status]
-    payments_date_inteval(Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days, search_params[:created_at]) if search_params[:created_at]
+  def search_transfers
+    @transfers = TransferIn.all.order(id: :desc)
+    @transfers = @transfers.with_result(search_params[:result]) if search_params[:result]
+    @transfers = @transfers.with_status(search_params[:status]) if search_params[:status]
+    transfers_date_inteval(Time.zone.parse(search_params[:created_at]) - CONFIG[:fiat][:search_day_diff].days, search_params[:created_at]) if search_params[:created_at]
   end
 
-  def payments_date_inteval(start_at, end_at)
-    @payments = @payments.where('created_at > ? and created_at < ?', start_at, end_at)
+  def transfers_date_inteval(start_at, end_at)
+    @transfers = @transfers.where('created_at > ? and created_at < ?', start_at, end_at)
   end
 
   def valid_import_params
-    uploaded_io = params[:payments]
+    uploaded_io = params[:transfers]
     
     if !uploaded_io || uploaded_io.tempfile.class != Tempfile
-      { payments: ['no file uploaded']}
+      { transfers: ['no file uploaded']}
     elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
       { timezone: ["no timezone or error format eg: '+03:00' "]}
     elsif !params[:bank_account]
@@ -158,9 +158,9 @@ class PaymentsController < ApplicationController
     b_account
   end
 
-  def payment_params
+  def transfer_params
     # whitelist params
-    params.permit(:source_id, :source_name, :source_code, :payment_type, :amount, :customer_code, :currency, :result, :description, :sender_info)
+    params.permit(:source_id, :source_name, :source_code, :transfer_type, :amount, :customer_code, :currency, :result, :description, :sender_info)
   end
 
   def search_params
@@ -168,7 +168,7 @@ class PaymentsController < ApplicationController
     params.permit(:source_id, :status, :result, :created_at, :archive_before, :per_page, :page_num)
   end
 
-  def set_payment
-    @payment = Payment.find(params[:id])
+  def set_transfer
+    @transfer = TransferIn.find(params[:id])
   end
 end

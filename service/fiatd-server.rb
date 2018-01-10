@@ -5,13 +5,13 @@ class FiatdServer
   CONFIG = FiatConfig.new
 
   def initialize(logger)
-    CONFIG[:fiat][:payment_type].each do |fiat|
+    CONFIG[:fiat][:transfer_type].each do |fiat|
       instance_variable_set("@#{fiat}_server", Kernel.const_get("#{fiat.capitalize}Server").new(CONFIG[fiat], logger))
     end
   end
 
 
-  CONFIG[:fiat][:payment_type].each do |fiat|
+  CONFIG[:fiat][:transfer_type].each do |fiat|
     define_method fiat do
       instance_variable_get "@#{fiat}_server"
     end

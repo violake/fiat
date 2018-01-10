@@ -1,5 +1,5 @@
 fiat: &default
-  payment_type: ["bank"]
+  transfer_type: ["bank"]
   log_level: INFO
   archive_limit: 7
   search_day_diff: 3

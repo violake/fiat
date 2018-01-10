@@ -3,13 +3,13 @@ require 'json'
 
 module Fiat
 
-  module Payments
+  module TransferIns
     
     class Westpac < Bank
-      def self.import(payments)
+      def self.import(transfers)
         result = {imported: 0, ignored: 0, error: 0, rejected: 0}
-        payments.each do |payment|
-          bank = self.convert(payment)
+        transfers.each do |transfer|
+          bank = self.convert(transfer)
           pay = self.find_by(source_id: bank[:source_id], source_type: bank[:source_type])
           if pay
             pay.reject_times += 1
@@ -36,7 +36,7 @@ module Fiat
         bank[:source_name] = "Wespac Statement"
         bank[:source_code] = westpac[:bank_account].to_json
         bank[:country] = "Australia"
-        bank[:payment_type] = "Bank"
+        bank[:transfer_type] = "Bank"
         bank[:amount] = westpac[:credit_amount]
         bank[:currency] = westpac[:currency]
         bank[:created_at] = westpac[:date]

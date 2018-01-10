@@ -51,16 +51,16 @@ class FiatdResender
   end
 
   #
-  #==== resending payments that haven't got reply messages
+  #==== resending transfers that haven't got reply messages
   # 
   def resend
     if @resending && !@busy
       begin
         @busy = !@busy
-        @fiat_config[:fiat][:payment_type].each do |fiat|
+        @fiat_config[:fiat][:transfer_type].each do |fiat|
           @resend_server ||= @fiat_server.send(fiat)
           count = @resend_server.resend
-          @logger.info "*** #{fiat} resend #{count} payments ***"
+          @logger.info "*** #{fiat} resend #{count} transfers ***"
         end
         @busy_count = 0
       rescue Exception => e

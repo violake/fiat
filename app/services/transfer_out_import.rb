@@ -1,15 +1,15 @@
 require_relative 'validation'
 require './service/amqp_queue'
 require './config/fiat_config'
-require './app/models/transfer'
+require './app/models/transfer_out'
 
 module Fiat
   
-  class TransferImport < TransactionImport
+  class TransferOutImport < TransactionImport
 
-    TRANSFER_MODULE = "Fiat::Transfers"
+    TRANSFER_MODULE = "Fiat::TransferOuts"
 
-    ## import transfers called by commandline 
+    ## import transfer-out called by commandline 
     #  [params]
     #  file : String -- file name
     #  [return]
@@ -17,7 +17,7 @@ module Fiat
     #  [used attribute:]
     #  @csv_str : Tempfile -- read string
     ##
-    def importTransfersFile(file, params)
+    def importTransferOutFile(file, params)
       begin
         @module = TRANSFER_MODULE
         raise "no source file" unless file

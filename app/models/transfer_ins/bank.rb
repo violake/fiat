@@ -4,16 +4,16 @@ require_relative '../../../config/fiat_config'
 
 module Fiat
 
-  module Payments
+  module TransferIns
 
-    class Bank < Payment
-      def self.import(payments)
+    class Bank < TransferIn
+      def self.import(transfers)
         result = {imported: 0, ignored: 0, error: 0}
-        Payment.transaction do
-          payments.each do |payment|
-            pay = self.find_or_initialize_by(source_id: payment[:source_id], source_code: payment[:source_code])
+        TransferIn.transaction do
+          transfers.each do |transfer|
+            pay = self.find_or_initialize_by(source_id: transfer[:source_id], source_code: transfer[:source_code])
             if(pay.valid_to_import?)
-              pay.set_values(payment)
+              pay.set_values(transfer)
               pay.save
               result[:imported] += 1
               result[:error] += 1 if pay.result == :error
@@ -30,7 +30,7 @@ module Fiat
         self.source_name = bank[:source_name]
         self.source_code = bank[:source_code]
         self.country = bank[:country]
-        self.payment_type = bank[:payment_type]
+        self.transfer_type = bank[:transfer_type]
         self.amount = bank[:amount]
         self.currency = bank[:currency]
         self.available = bank[:available] ? bank[:available] : "true"

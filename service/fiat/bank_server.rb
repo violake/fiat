@@ -8,7 +8,8 @@ require 'enumerize'
 require 'paper_trail'
 require './app/models/application_record'
 Dir['./app/models/*.rb'].each {|file| require file }
-Dir['./app/models/payments/*.rb'].each {|file| require file }
+Dir['./app/models/transfer_ins/*.rb'].each {|file| require file }
+Dir['./app/models/transfer_outs/*.rb'].each {|file| require file }
 require_relative '../../util/error_handler'
 require_relative '../../db/data_accessor.rb'
 
@@ -55,59 +56,59 @@ class BankServer
   #==== deposit rabbitmq command
   #
   # params :
-  #   payment_id     : string  - payment id sent to acx for autodeposit
+  #   transfer_id     : string  - transfer id sent to acx for autodeposit
   #   deposit_remote : Hash    - deposit data from acx
   #
   # return : hash
   #   success : boolean
   #
   def autodeposit(params)
-    payment_id = params["payment_id"]
-    response = {log: true, payment_id: payment_id}
+    transfer_id = params["transfer_id"]
+    response = {log: true, transfer_id: transfer_id}
     if !params["error"] && params["deposit"]
-      pair_deposit_to_payment(params["deposit"], response)
+      pair_deposit_to_transfer_in(params["deposit"], response)
     else
-      payment = Payment.find(payment_id)
-      payment.error_info = params["error"]
-      payment.result = :error
-      payment.save
+      transfer = TransferIn.find(transfer_id)
+      transfer.error_info = params["error"]
+      transfer.result = :error
+      transfer.save
       response[:success] = true
     end
     response
   end
 
   def resend
-    Payment.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |payment|
-      payment.result = :error
-      payment.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
-      payment.save
+    TransferIn.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |transfer|
+      transfer.result = :error
+      transfer.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
+      transfer.save
     end
-    Payment.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, payment|
-      response = {"command": "reconcile", "payment": payment}
+    TransferIn.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, transfer|
+      response = {"command": "reconcile", "transfer": transfer}
       AMQPQueue.enqueue(response)
       @logger.debug "resent :#{response}"
-      payment.send_times += 1
-      payment.save
+      transfer.send_times += 1
+      transfer.save
       count += 1
     end
   end
 
-  def update_send_single_payment(id, params)
-    payment = Payment.find(id)
-    if payment.mend_error(params)
-      send_payments([payment])
+  def update_send_single_transfer_in(id, params)
+    transfer = TransferIn.find(id)
+    if transfer.mend_error(params)
+      send_transfer_ins([transfer])
     else
-      raise "saving payment(#{id}) error: '#{payment.errors.messages}'"
+      raise "saving transfer(#{id}) error: '#{transfer.errors.messages}'"
     end
   end
 
-  def send_single_payment(id)
-    payment = Payment.find(id)
-    send_payments([payment])
+  def send_single_transfer_in(id)
+    transfer = TransferIn.find(id)
+    send_transfer_ins([transfer])
   end
 
-  def get_payment(id)
-    payment = Payment.find(id)
+  def get_transfer_in(id)
+    transfer = TransferIn.find(id)
   end
 
   def sync_bank_accounts
@@ -143,14 +144,14 @@ class BankServer
 
   private 
 
-  def pair_deposit_to_payment(deposit_remote, response)
+  def pair_deposit_to_transfer_in(deposit_remote, response)
     response[:deposit_id] = deposit_remote["deposit_id"]
-    payment = Payment.find(response[:payment_id])
+    transfer = TransferIn.find(response[:transfer_id])
     deposit = Deposit.find_or_initialize_by(id: deposit_remote["deposit_id"])
     if (!deposit.aasm_state || deposit.aasm_state != deposit_remote["aasm_state"]) && (!deposit.done_at || deposit.done_at < deposit_remote["updated_at"])
       deposit.set_values(deposit_remote)
       if deposit.save
-        payment.deposit(deposit, deposit_remote["error"])
+        transfer.deposit(deposit, deposit_remote["error"])
         response[:success] = true
       else
         response[:success] = false
@@ -162,14 +163,14 @@ class BankServer
     end
   end
 
-  def send_payments(payments)
-    payments.each do |payment|
-      response = {"command": "reconcile", "payment": payment}
+  def send_transfer_ins(transfers)
+    transfers.each do |transfer|
+      response = {"command": "reconcile", "transfer": transfer}
       AMQPQueue.enqueue(response)
       @logger.debug "sent :#{response}"
-      unless payment.status_sent?
-        payment.status = :sent
-        payment.save
+      unless transfer.status_sent?
+        transfer.status = :sent
+        transfer.save
       end
     end
   end
