@@ -3,6 +3,7 @@ require_relative './config/environment'
 require 'thor'
 require 'codecal'
 require_relative './app/services/transfer_in_import'
+require_relative './app/services/transfer_out_import'
 require_relative './config/fiat_config'
 require_relative './service/fiat-mailer'
 require_relative './util/fiatd_logger'
@@ -42,6 +43,22 @@ class FiatCLI < Thor
   rescue Exception=>e
     puts "Error: #{e.message}" 
   end 
+
+  desc "importTransferOutCSV csv_file_name", "check transfers csv file data and import into database then sending to ACX via MQ"
+  method_option :timezone, aliases: '-t', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
+  method_option :bank_account, aliases: '-a', type: :string, required: true, desc: "please give the bank account if csv doesn't have, eg: '033152-468666'"
+  def importTransferOutCSV(file)
+    raise "timezone format error: '#{options[:timezone]}'. eg: [+08:00] " unless /^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(options[:timezone])
+    raise "bank account error: '#{options[:bank_account]}' " if !options[:bank_account] || !( /\d{6}-\d{6,8}/.match(options[:bank_account]) )
+    params = convert_to_hash(options)
+    bank_account = get_bank_account_detail(params[:bank_account], params)
+    raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
+    params[:bank_account] = bank_account
+    params[:source_type] = bank_account["bank"].split(' ').shift.downcase
+    puts Fiat::TransferOutImport.new.importTransferOutFile(file, params)
+  rescue Exception=>e
+    puts "Error: #{e.message}" 
+  end
 
   desc "exportErrorCSV", "export error transfers to csv file or send email with attachment"
   method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
