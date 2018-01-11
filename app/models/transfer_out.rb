@@ -8,6 +8,7 @@ class TransferOut < ApplicationRecord
   enumerize :status, in: STATUS, scope: true, predicates: { prefix: true }
   enumerize :result, in: RESULT, scope: true, predicates: { prefix: true }
 
+  validates_presence_of :source_id, :source_name, :source_code, :transfer_type, :amount, :currency
   validates_uniqueness_of :source_id, :scope => :source_code
   validates :txid, uniqueness: true, allow_nil: true
 

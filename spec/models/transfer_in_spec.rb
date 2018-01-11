@@ -43,9 +43,9 @@ RSpec.describe TransferIn, type: :model do
                }
       ts.set_timezone("-03:00")
       expect(Time.zone.utc_offset).to eq(-10800)
-      transfer.set_values(params)
-      expect(transfer.created_at).to eq("2017-08-01 04:00:00 UTC")
-      expect(transfer.updated_at).to eq("2017-08-01 06:00:00 UTC")
+      transfer_in.set_values(params)
+      expect(transfer_in.created_at).to eq("2017-08-01 04:00:00 UTC")
+      expect(transfer_in.updated_at).to eq("2017-08-01 06:00:00 UTC")
       ts.timezone_reset
       expect(Time.zone.utc_offset).to eq(0)
     end
@@ -65,9 +65,9 @@ RSpec.describe TransferIn, type: :model do
                }
       ts.set_timezone("+03:00")
       expect(Time.zone.utc_offset).to eq(10800)
-      transfer.set_values(params)
-      expect(transfer.created_at).to eq("2017-07-31 22:00:00 UTC")
-      expect(transfer.updated_at).to eq("2017-08-01 00:00:00 UTC")
+      transfer_in.set_values(params)
+      expect(transfer_in.created_at).to eq("2017-07-31 22:00:00 UTC")
+      expect(transfer_in.updated_at).to eq("2017-08-01 00:00:00 UTC")
       ts.timezone_reset
       expect(Time.zone.utc_offset).to eq(0)
     end
@@ -84,34 +84,34 @@ RSpec.describe TransferIn, type: :model do
   describe "capture customer code" do
     it "return correct code when one code given" do
       bank[:description] = "Direct Credit Go MEACHAM 3c3k37"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq("3c3k37")
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq("3c3k37")
     end
 
     it "return correct upcase code when one code given" do
       bank[:description] = "Direct Credit Go MEACHAM 3C3K37"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq("3c3k37")
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq("3c3k37")
     end
 
     it "return correct code when one correct code and one error code given" do
       bank[:description] = "Direct Credit Go MEACHAM 3d2343 3c3k37"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq("3c3k37")
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq("3c3k37")
 
       bank[:description] = "Direct Credit Go MEACHAM 3c3k37 3d2343"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq("3c3k37")
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq("3c3k37")
     end
 
     it "return nil when error code given" do
       bank[:description] = "Direct Credit Go MEACHAM 3d2343"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq(nil)
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq(nil)
 
       bank[:description] = "Direct Credit Go MEACHAM 3d2343 6flkjdfha"
-      transfer.set_values(bank)
-      expect(transfer.customer_code).to eq(nil)
+      transfer_in.set_values(bank)
+      expect(transfer_in.customer_code).to eq(nil)
     end
   end
 
