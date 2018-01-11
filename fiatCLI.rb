@@ -55,7 +55,7 @@ class FiatCLI < Thor
     raise "invalid bank account: '#{params[:bank_account]}' " unless bank_account
     params[:bank_account] = bank_account
     params[:source_type] = bank_account["bank"].split(' ').shift.downcase
-    puts Fiat::TransferOutImport.new.importTransferOutFile(file, params)
+    puts Fiat::TransferOutImport.new.importTransferOutsFile(file, params)
   rescue Exception=>e
     puts "Error: #{e.message}" 
   end
