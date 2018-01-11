@@ -6,6 +6,8 @@ module Fiat
   module TransferIns
     
     class Westpac < Bank
+      extend Fiat::Jhash
+
       def self.import(transfers)
         result = {imported: 0, ignored: 0, error: 0, rejected: 0}
         transfers.each do |transfer|
@@ -71,21 +73,8 @@ module Fiat
                     westpac[:source_type]].inject(""){|s, k| s+=k if k; s})
       end
 
-      private
-
-      def self.jhash(str)
-        result = 0
-        mul = 1
-        max_mod = 2**63 - 1
-        str.chars.reverse_each do |c|
-            result += mul * c.ord
-            result %= max_mod
-            mul *= 31
-        end
-        result
-      end
-
     end
 
   end
+  
 end
