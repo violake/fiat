@@ -2,8 +2,7 @@ require 'rails_helper'
 require './app/services/transaction_import.rb'
 
 RSpec.describe TransferIn, type: :model do
-  let(:transfer) { create(:bank) }
-  let(:transactionImport) { }
+  let(:transfer_in) { create(:bank) }
   let(:bank) { {created_at: "201708010100"} }
 
   it { should validate_presence_of(:source_id) }
