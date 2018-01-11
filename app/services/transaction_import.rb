@@ -1,5 +1,6 @@
 require_relative 'validation'
 require './util/timezone'
+require 'active_support/inflector'
 
 module Fiat
   
@@ -85,7 +86,7 @@ module Fiat
 
     # get transaction name for this process
     def transaction_name
-      @module.split("::").last.downcase.singularize
+      @module.split("::").last.underscore.singularize
     end
   
   end
