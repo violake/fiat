@@ -39,10 +39,9 @@ module Fiat
         self.created_at = Westpac.convertTimeZone(westpac[:date])
         self.description = westpac[:narrative]
         self.status = :new
-        self.customer_code = capture_withdraw_ids(westpac[:narrative])
-        self.customer_code == nil ? self.result = :error : self.result = :unreconciled
-        self.error_info = nil
-        self.error_info = "missing withdraw id" if self.result == :error
+        set_txid_withdraw_ids(westpac[:narrative])
+        self.result = self.withdraw_ids == nil ?  :error : :unreconciled
+        self.error_info = self.result == :error ? "missing withdraw id" : nil
         self.source_type = westpac[:source_type]
       end
 
@@ -56,6 +55,18 @@ module Fiat
                     westpac[:serial], 
                     westpac[:currency], 
                     westpac[:source_type]].inject(""){|s, k| s+=k if k; s})
+      end
+
+      private
+
+      def set_txid_withdraw_ids(description)
+        number_arr = description.scan(%r[#{FiatConfig.new[:westpac][:transfer_out_withdrawal_regex]}])
+        if number_arr.size < 2
+          return nil 
+        else
+          self.txid = number_arr.shift
+          self.withdraw_ids = number_arr.join(",")
+        end
       end
 
     end

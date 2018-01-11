@@ -20,6 +20,7 @@ westpac:
   bank_account_regex: \d{12}|\d{14}
   import_transfer_in_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
   import_transfer_out_categories: ["PAYMENT"]
+  transfer_out_withdrawal_regex: \d+
 
 fiat_email:
   server: 'smtp.gmail.com'
