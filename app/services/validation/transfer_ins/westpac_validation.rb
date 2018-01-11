@@ -109,7 +109,7 @@ module Fiat
 
       def self.filter_white_list(transfers)
         transfers.inject([]) do |filtered_transfers, transfer|
-          filtered_transfers.push(transfer) if transfer[:credit_amount].to_i > 0 && FiatConfig.new[:westpac][:import_filter_categories].include?(transfer[:categories])
+          filtered_transfers.push(transfer) if transfer[:credit_amount].to_i > 0 && FiatConfig.new[:westpac][:import_transfer_in_categories].include?(transfer[:categories])
           filtered_transfers
         end
       end
