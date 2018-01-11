@@ -2,6 +2,17 @@
 # add configuration for withdrawal reconciliation
 
 fiat.yml
+## name change
+
+...
+-  payment_type: ["bank"]
++  transfer_type: ["bank"]
+...
+-  import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
++  import_transfer_in_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
+...
+
+## add new configuration
 
 ...
 westpac:
