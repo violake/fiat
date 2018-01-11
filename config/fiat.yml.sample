@@ -9,6 +9,9 @@ fiat: &default
   resend_lag: 60
   resend_times: 3
   rails_env: "production"
+  bank_accounts_filter: ["honesty_point", "acceptable_amount"]
+  customer_code_mask: "pgh27fds8i"
+  customer_code_regex: '[\d]{1}[A-Za-z0-9]{5,11}'
 
 bank:
   <<: *default
@@ -16,6 +19,8 @@ bank:
 westpac:
   bank_account_regex: \d{12}|\d{14}
   import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
+  import_transfer_out_categories: ["PAYMENT"]
+  transfer_out_withdrawal_regex: \d+
 
 fiat_email:
   server: 'smtp.gmail.com'
