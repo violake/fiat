@@ -41,7 +41,7 @@ class FiatCLI < Thor
     params[:source_type] = bank_account["bank"].split(' ').shift.downcase
     puts Fiat::TransferInImport.new.importTransferInsFile(file, params)
   rescue Exception=>e
-    puts "Error: #{e.message}" 
+    print_errormsg(e)
   end 
 
   desc "importTransferOutCSV csv_file_name", "check transfers csv file data and import into database then sending to ACX via MQ"
@@ -57,7 +57,7 @@ class FiatCLI < Thor
     params[:source_type] = bank_account["bank"].split(' ').shift.downcase
     puts Fiat::TransferOutImport.new.importTransferOutsFile(file, params)
   rescue Exception=>e
-    puts "Error: #{e.message}" 
+    print_errormsg(e)
   end
 
   desc "exportErrorCSV", "export error transfers to csv file or send email with attachment"
@@ -77,7 +77,7 @@ class FiatCLI < Thor
       puts "error input: #{options}"
     end
   rescue Exception=>e
-    puts "Error: #{e.message}"
+    print_errormsg(e)
   end
 
   desc "updateTransferIn id", "update error transfer for reconciliation"
@@ -100,7 +100,7 @@ class FiatCLI < Thor
     bankServer.update_send_single_transfer_in(id, params)
     puts "transfer-in(#{id}) sent to MQ"
   rescue Exception=>e
-    puts "Error: #{e.message}"
+    print_errormsg(e)
   end
 
   desc "sendTransferIn id", "send transfer to MQ for reconciliation"
@@ -111,7 +111,7 @@ class FiatCLI < Thor
     bankServer.send_single_transfer_in(id)
     puts "transfer-in(#{id}) sent to MQ"
   rescue Exception=>e
-    puts "Error: #{e.message}"
+    print_errormsg(e)
   end
 
   desc "getTransferIn id", "get transfer record"
@@ -121,7 +121,7 @@ class FiatCLI < Thor
     bankServer = BankServer.new(@fiat_config["bank"], logger)
     puts bankServer.get_transfer_in(id).inspect
   rescue Exception=>e
-    puts "Error: #{e.message}"
+    print_errormsg(e)
   end
     
   desc "dailyAmount currency, *params", "show daily amount summary."
@@ -144,6 +144,7 @@ class FiatCLI < Thor
     > $ fiatCLI.rb dailyAmount aud 20170917 20170918 033152-468666
   LONGDESC
   def dailyAmount(currency, *params)
+    raise "parameter missing" if params.size == 0
     if params.size == 1
       start_date, end_date = params[0], params[0]
     else
@@ -157,10 +158,16 @@ class FiatCLI < Thor
     raise "invalid bank account: '#{bank_account}' " if bank_account && !get_bank_account_detail(bank_account)
     TransferIn.get_daily_sum(start_date, end_date, currency, bank_account ? bank_account.delete('-') : nil).map.each {|p| puts p.inject([]){|arr, (k,v)| arr.push("#{k}:#{v}")}.join(", ")}
   rescue Exception=>e
-    puts "Error: #{e.message}"
+    print_errormsg(e)
   end
   
   private
+
+  def print_errormsg(e)
+    puts "Error: #{e.message}"
+    puts e.backtrace.inspect
+  end
+
   def get_bank_account_detail(bank_account, params=nil)
     b_account = nil
     return nil unless @fiat_config[:fiat_accounts]
