@@ -21,8 +21,18 @@ module Fiat
 
     private
     
+    # params check
+    def check_params(params)
+      errormsg = [:source_type, :currency, :bank_account].inject([]) do |error, param|
+        error.push(param.to_s) unless params[param]
+        error
+      end
+      raise "Missing params: #{errormsg.to_s}" if errormsg.size > 0
+    end
+
     # assigment params
     def handle_params(params)
+      check_params(params)
       @source_type = params[:source_type]
       @currency = params[:currency]
       @bank_account = params[:bank_account]
@@ -64,13 +74,18 @@ module Fiat
     # send data with customer_code to ACX via rabbitmq server
     def send_to_acx
       @result[:sent] = @transaction_class.with_status(:new).with_result(:unreconciled).inject(0) do |count, transaction|
-        response = {"command"=> "reconcile", @module.split("::").last.downcase.singularize => transaction}
+        response = {"command"=> "reconcile_#{transaction_name}", transaction_name => transaction}
         AMQPQueue.enqueue(response)
         transaction.status = :sent
         transaction.send_times += 1
         transaction.save
         count += 1
       end
+    end
+
+    # get transaction name for this process
+    def transaction_name
+      @module.split("::").last.downcase.singularize
     end
   
   end

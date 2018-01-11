@@ -6,7 +6,6 @@ module Fiat
   module TransferIns
     
     class Westpac < Bank
-      extend Fiat::Jhash
 
       def self.import(transfers)
         result = {imported: 0, ignored: 0, error: 0, rejected: 0}

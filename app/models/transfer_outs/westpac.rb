@@ -3,47 +3,45 @@ module Fiat
   module TransferOuts
     
     class Westpac < TransferOut
-      extend Fiat::Jhash
+      extend Fiat::Convert
 
       #:bank_account, :date, :narrative, :debit_amount, :credit_amount, :categories, :serial]
 
 
       def self.import(transfers)
+        result = {imported: 0, ignored: 0, error: 0}
+        TransferOut.transaction do
+          transfers.each do |transfer|
+            transfer_out = self.find_or_initialize_by(source_id: transfer[:source_id], source_code: transfer[:source_code])
+            if(transfer_out.valid_to_import?)
+              transfer_out.set_values(transfer)
+              transfer_out.save
+              result[:imported] += 1
+              result[:error] += 1 if transfer_out.result == :error
+            else
+              result[:ignored] += 1
+            end
+          end
+        end
+        result
       end
 
       def set_values(westpac)
-        self.source_id ||= self.generate_id(westpac)
+        self.source_id ||= Westpac.generate_id(westpac)
         self.source_name = "Wespac Statement"
         self.source_code = westpac[:bank_account].to_json
         self.country = "Australia"
         self.transfer_type = "Bank"
         self.amount = westpac[:debit_amount]
         self.currency = westpac[:currency]
-        self.created_at = convertTimeZone(bank[:created_at])
-        self.updated_at = bank[:updated_at] ? convertTimeZone(bank[:updated_at]) : nil
-        self.description = bank[:description]
-        self.sender_info = bank[:sender_info]
+        self.created_at = Westpac.convertTimeZone(westpac[:date])
+        self.description = westpac[:narrative]
         self.status = :new
-        self.customer_code = capture_customer_code(bank[:description])
+        self.customer_code = capture_withdraw_ids(westpac[:narrative])
         self.customer_code == nil ? self.result = :error : self.result = :unreconciled
         self.error_info = nil
-        self.error_info = "missing customer deposit code" if self.result == :error
-        self.source_type = bank[:source_type]
-      end
-
-      def self.convert(westpac)
-        bank = {}
-        bank[:source_id] = self.generate_id(westpac)
-        bank[:source_name] = "Wespac Statement"
-        bank[:source_code] = westpac[:bank_account].to_json
-        bank[:country] = "Australia"
-        bank[:transfer_type] = "Bank"
-        bank[:amount] = westpac[:credit_amount]
-        bank[:currency] = westpac[:currency]
-        bank[:created_at] = westpac[:date]
-        bank[:description] = westpac[:narrative]
-        bank[:source_type] = westpac[:source_type]
-        return bank
+        self.error_info = "missing withdraw id" if self.result == :error
+        self.source_type = westpac[:source_type]
       end
 
       def self.generate_id(westpac)

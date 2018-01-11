@@ -1,21 +1,13 @@
-require_relative '../base_validation'
+require_relative '../westpac_validation'
+
 module Fiat
 
   module TransferOuts
 
-    class WestpacValidation < BaseValidation
-
-      def self.check_columnname(column_names)
-        [:bank_account, :date, :narrative, :debit_amount, :credit_amount, :categories, :serial].inject([]) do |missing, column|
-          if column_names.include?(column) then missing else missing.push(column) end
-        end
-      end
+    class WestpacValidation < Fiat::WestpacValidation
 
       def self.filter(transfers)
         self.filter_white_list(transfers)
-      end
-
-      def self.validate(transfer)
       end
 
       private

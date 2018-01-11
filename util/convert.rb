@@ -1,6 +1,6 @@
 module Fiat
   
-  module Jhash
+  module Convert
 
     def jhash(str)
       result = 0
@@ -14,5 +14,10 @@ module Fiat
       result
     end
 
+    def convertTimeZone(timestr)
+      return Time.zone.parse(timestr).to_s
+    end
+
   end
+  
 end

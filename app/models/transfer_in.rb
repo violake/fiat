@@ -64,10 +64,6 @@ class TransferIn < ApplicationRecord
     end
   end
 
-  def convertTimeZone(timestr)
-    return Time.zone.parse(timestr).to_s
-  end
-
   def valid_to_import?
     return true if (self.status == nil || self.result == nil) ||
                    (self.status == :new && (self.result == :unreconciled || self.result == :error) ) ||

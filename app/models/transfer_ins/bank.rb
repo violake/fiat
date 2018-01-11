@@ -7,16 +7,18 @@ module Fiat
   module TransferIns
 
     class Bank < TransferIn
+      extend Fiat::Convert
+
       def self.import(transfers)
         result = {imported: 0, ignored: 0, error: 0}
         TransferIn.transaction do
           transfers.each do |transfer|
-            pay = self.find_or_initialize_by(source_id: transfer[:source_id], source_code: transfer[:source_code])
-            if(pay.valid_to_import?)
-              pay.set_values(transfer)
-              pay.save
+            transfer_in = self.find_or_initialize_by(source_id: transfer[:source_id], source_code: transfer[:source_code])
+            if(transfer_in.valid_to_import?)
+              transfer_in.set_values(transfer)
+              transfer_in.save
               result[:imported] += 1
-              result[:error] += 1 if pay.result == :error
+              result[:error] += 1 if transfer_in.result == :error
             else
               result[:ignored] += 1
             end
@@ -34,8 +36,8 @@ module Fiat
         self.amount = bank[:amount]
         self.currency = bank[:currency]
         self.available = bank[:available] ? bank[:available] : "true"
-        self.created_at = convertTimeZone(bank[:created_at])
-        self.updated_at = bank[:updated_at] ? convertTimeZone(bank[:updated_at]) : nil
+        self.created_at = Bank.convertTimeZone(bank[:created_at])
+        self.updated_at = bank[:updated_at] ? Bank.convertTimeZone(bank[:updated_at]) : nil
         self.description = bank[:description]
         self.sender_info = bank[:sender_info]
         self.status = :new
