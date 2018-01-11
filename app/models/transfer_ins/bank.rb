@@ -1,6 +1,6 @@
 require 'codecal'
 require_relative '../../../config/fiat_config'
-
+require './util/convert'
 
 module Fiat
 

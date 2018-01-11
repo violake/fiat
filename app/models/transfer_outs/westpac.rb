@@ -1,3 +1,5 @@
+require './util/convert'
+
 module Fiat
 
   module TransferOuts
