@@ -18,6 +18,13 @@ RSpec.describe Fiat::TransferOutImport do
       expect(response[:error]).to eq(1)
       expect(response[:sent]).to eq(5)
       expect(response[:filtered]).to eq(5)
+
+      expect(TransferOut.where('description like "%WITHDRAWAL MOBILE 1363663%"').first.withdraw_ids).to eq(nil)
+      expect(TransferOut.where('description like "%WITHDRAWAL ONLINE 1562538%"').first.withdraw_ids).to eq("68472")
+      expect(TransferOut.where('description like "%WITHDRAWAL ONLINE 1543542%"').first.withdraw_ids).to eq("68471")
+      expect(TransferOut.where('description like "%WITHDRAWAL ONLINE 1709199%"').first.withdraw_ids).to eq("50653")
+      expect(TransferOut.where('description like "%WITHDRAWAL ONLINE 1232636%"').first.withdraw_ids).to eq("56620,1234,2354")
+
     end
 
   end
