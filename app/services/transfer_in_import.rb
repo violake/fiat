@@ -63,7 +63,7 @@ module Fiat
 
 
     def force_reconcile(transfer)
-      response = {"command": "force_reconcile", "transfer": transfer}
+      response = {"command": "force_reconcile", "transfer_in": transfer}
       AMQPQueue.enqueue(response)
       transfer.status = :sent
       transfer.send_times += 1
