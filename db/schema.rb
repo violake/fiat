@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180110032917) do
+ActiveRecord::Schema.define(version: 20180112002249) do
 
   create_table "deposits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "account_id"
@@ -80,6 +80,8 @@ ActiveRecord::Schema.define(version: 20180110032917) do
     t.integer "reject_times", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "lodged_amount", precision: 32, scale: 16
+    t.string "email", limit: 100
   end
 
   create_table "versions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|

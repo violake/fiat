@@ -25,19 +25,22 @@ class TransferOut < ApplicationRecord
                     source_code
                     source_type
                     country
-                    transfer_type
-                    amount
-                    currency
-                    withdraw_ids
+                    email
                     customer_code
+                    transfer_type
+                    withdraw_ids
+                    lodged_amount
+                    amount
+                    error_info
+                    currency
+                    txid
+                    description
+                    status
+                    result
                     created_at
                     updated_at
                     matched_at
-                    txid
-                    description
-                    error_info
-                    status
-                    result}
+                    }
 
     CSV.generate(headers: true, force_quotes: true) do |csv|
       csv << attributes
