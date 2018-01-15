@@ -57,7 +57,7 @@ class BankServer
   #
   # params :
   #   transfer_id     : string  - transfer id sent to acx for autodeposit
-  #   deposit_remote : Hash    - deposit data from acx
+  #   deposit : Hash    - deposit data from acx
   #
   # return : hash
   #   success : boolean
@@ -73,6 +73,26 @@ class BankServer
       transfer.result = :error
       transfer.save
       response[:success] = true
+    end
+    response
+  end
+
+  #==== deposit rabbitmq command
+  #
+  # params :
+  #   transfer_id     : string  - transfer id sent to acx for autowithdraw
+  #   withdraw : Hash    - withdraw data from acx
+  #
+  # return : hash
+  #   success : boolean
+  #
+  def autowithdraw(params)
+    transfer_id = params["transfer_id"]
+    response = {log: true, transfer_id: transfer_id}
+    if !params["error"] && params["withdraw"]
+      pair_withdraw_to_transfer_out(params["withdraw"], response)
+    else
+      save_error_transfer_out(params, response)
     end
     response
   end
@@ -96,15 +116,15 @@ class BankServer
   def update_send_single_transfer_in(id, params)
     transfer = TransferIn.find(id)
     if transfer.mend_error(params)
-      send_transfer_ins([transfer])
+      send_transfer([transfer])
     else
-      raise "saving transfer(#{id}) error: '#{transfer.errors.messages}'"
+      raise "saving transfer-in(#{id}) error: '#{transfer.errors.messages}'"
     end
   end
 
   def send_single_transfer_in(id)
     transfer = TransferIn.find(id)
-    send_transfer_ins([transfer])
+    send_transfer([transfer])
   end
 
   def get_transfer_in(id)
@@ -163,9 +183,40 @@ class BankServer
     end
   end
 
-  def send_transfer_ins(transfers)
+  def pair_withdraw_to_transfer_out(withdraw_remote, response)
+    response[:withdraw_id] = withdraw_remote["withdraw_id"]
+    transfer = TransferOut.find(response[:transfer_id])
+    withdraw = Withdraw.find_or_initialize_by(id: withdraw_remote["withdraw_id"])
+    if !withdraw.aasm_state && !withdraw.done_at && transfer
+      withdraw.set_values(withdraw_remote)
+      if withdraw.save
+        transfer.withdraw_reconcile(withdraw_remote, withdraw, response)
+      else
+        response[:success] = false
+        response[:error] = withdraw.errors.messages
+      end
+    else
+      response[:success] = false
+      response[:error] = "withdraw was already matched"
+    end
+  end
+
+  def save_error_transfer_out(params, response)
+    transfer = TransferOut.find(transfer_id)
+    if !transfer.result_reconciled?
+      transfer.error_info = params["error"]
+      transfer.result = :error
+      transfer.save
+      response[:success] = true
+    else
+      response[:success] = false
+      response[:error] = "transfer-out was already reconciled"
+    end
+  end
+
+  def send_transfer(transfers)
     transfers.each do |transfer|
-      response = {"command": "reconcile", "transfer": transfer}
+      response = {"command": "reconcile_#{transfer.class.underscore}", "#{transfer.class.underscore}": transfer}
       AMQPQueue.enqueue(response)
       @logger.debug "sent :#{response}"
       unless transfer.status_sent?

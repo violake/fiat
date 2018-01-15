@@ -221,6 +221,22 @@ class Fiatd
   end
 
   #
+  # ==== withdraw
+  #
+  # params: hash
+  # {
+  #   transfer_id : Integer
+  #   deposit    : Hash
+  # }
+  #
+  # return: boolean - deposit mapping transfer successfully or not
+  #
+  #
+  def cmd_autowithdraw params
+    @server.autowithdraw(params)
+  end
+
+  #
   #==== Synchronize bank accounts with ACX
   #
   # params : hash

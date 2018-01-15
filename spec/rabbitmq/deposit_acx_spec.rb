@@ -28,6 +28,7 @@ RSpec.describe BankServer do
       expect(result[:transfer_id]).to eq(transfer_id)
       expect(result[:deposit_id]).to eq(deposit_remote["deposit_id"])
       expect(Deposit.find(deposit_remote["deposit_id"]).aasm_state).to eq("accepted")
+      expect(Deposit.find(deposit_remote["deposit_id"]).id).to eq(deposit_remote["deposit_id"].to_i)
       expect(TransferIn.find(transfer_id).result).to eq("reconciled")
       expect(TransferIn.find(transfer_id).deposit_id).to eq(deposit_remote["deposit_id"].to_i)
     end

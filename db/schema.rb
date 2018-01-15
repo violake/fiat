@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180112002249) do
+ActiveRecord::Schema.define(version: 20180115053017) do
 
   create_table "deposits", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "account_id"
@@ -82,6 +82,7 @@ ActiveRecord::Schema.define(version: 20180112002249) do
     t.datetime "updated_at", null: false
     t.decimal "lodged_amount", precision: 32, scale: 16
     t.string "email", limit: 100
+    t.decimal "fee", precision: 32, scale: 16
   end
 
   create_table "versions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
@@ -92,6 +93,25 @@ ActiveRecord::Schema.define(version: 20180112002249) do
     t.text "object", limit: 4294967295
     t.datetime "created_at"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
+  end
+
+  create_table "withdraws", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "transfer_out_id"
+    t.string "sn"
+    t.integer "account_id"
+    t.integer "member_id"
+    t.integer "currency"
+    t.decimal "amount", precision: 32, scale: 16
+    t.decimal "fee", precision: 32, scale: 16
+    t.string "fund_uid"
+    t.text "fund_extra"
+    t.datetime "done_at"
+    t.string "txid"
+    t.string "aasm_state"
+    t.decimal "sum", precision: 32, scale: 16, default: "0.0", null: false
+    t.string "type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
 end
