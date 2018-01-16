@@ -190,7 +190,7 @@ class BankServer
     if !withdraw.aasm_state && !withdraw.done_at && transfer && transfer.my_withdrawal?(withdraw_remote, response)
       withdraw.set_values(withdraw_remote)
       if withdraw.save
-        transfer.withdraw_reconcile
+        transfer.withdraw_reconcile(response)
       else
         response[:success] = false
         response[:error] = withdraw.errors.messages
