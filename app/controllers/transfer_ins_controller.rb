@@ -5,16 +5,13 @@ require_relative '../services/validation'
 class TransferInsController < ApplicationController
   before_action :auth_member!
   before_action :set_transfer, only: [:show, :update, :force_reconcile]
+  before_action :validate_import_params, only: [:import]
+
   CONFIG = FiatConfig.new
   # POST /transfers
   def import
-    valid = valid_import_params
-    if valid.is_a? (Hash)
-      json_response( valid , 400)
-    else
-      success, result = Fiat::TransferInImport.new.importTransferIns(params)
-      json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
-    end
+    success, result = Fiat::TransferInImport.new.importTransferIns(params)
+    json_response(success ? {:result => result} : {:base => [result]}, success ? 200 : 400)
   end
 
 
@@ -78,23 +75,22 @@ class TransferInsController < ApplicationController
     @transfers = @transfers.where('created_at > ? and created_at < ?', start_at, end_at)
   end
 
-  def valid_import_params
+  def validate_import_params
     uploaded_io = params[:transfers]
     
     if !uploaded_io || uploaded_io.tempfile.class != Tempfile
-      { transfers: ['no file uploaded']}
+      json_response( { transfers: ['no file uploaded']} , 400)
     elsif !params[:timezone] || ! (/^[+\-](0\d|1[0-2]):([0-5]\d)$/.match(params[:timezone]) )
-      { timezone: ["no timezone or error format eg: '+03:00' "]}
+      json_response( { timezone: ["no timezone or error format eg: '+03:00' "]} , 400)
     elsif !params[:bank_account]
-      { bank_account: ["no bank account or error "]}
+      json_response( { bank_account: ["no bank account or error "]} , 400)
     else
       bank_account = get_bankaccount(params[:bank_account], params)
       if bank_account
         params[:bank_account] = bank_account
         params[:source_type] = bank_account["bank"].split(' ').shift.downcase
-        nil
       else
-        { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]}
+        json_response( { bank_account: ["incorrect bank account: '#{params[:bank_account]}' "]} , 400)
       end
     end
   end

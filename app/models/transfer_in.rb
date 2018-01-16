@@ -28,7 +28,7 @@ class TransferIn < ApplicationRecord
                         "#{source_code_str} " \
                         "and result = 'reconciled' " \
                         "group by source_code, currency, DATE(created_at) ) b " \
-                        "on a.date = b.date")
+                        "on a.date = b.date and a.source_code = b.source_code")
     results.inject([]) do |daily_sum, result|
       daily_sum.push({bank_account: result[0], daily_amount: result[1], reconciled_amount: result[2], date: result[3].to_s, currency: result[4]})
     end
