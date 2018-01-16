@@ -1,4 +1,5 @@
 class TransferOut < ApplicationRecord
+  has_paper_trail
  
   STATUS = [:new, :sent, :archived]
   RESULT = [:unreconciled, :reconciled, :error]
@@ -27,8 +28,13 @@ class TransferOut < ApplicationRecord
       withdraw.save
       response[:error] = errormsg
     else
-      reconcile! if can_reconcile?
-      response[:success] = true
+      if can_reconcile?
+        reconcile!
+        response[:success] = true
+      else
+        response[:success] = false
+        response[:error] = "transfer-out(id: '#{self.id}') has already matched all withdrawals"
+      end
     end
   end
 
@@ -65,7 +71,11 @@ class TransferOut < ApplicationRecord
   end
 
   def withdraws
-    Withdraw.where("id in (#{withdraw_ids})").each
+    Withdraw.where("id in (#{withdraw_ids})")
+  end
+
+  def my_withdrawal?(id)
+    self.withdraw_ids.split(",").include?(id)
   end
 
   private
@@ -75,9 +85,9 @@ class TransferOut < ApplicationRecord
   end
 
   def can_reconcile?
-    return false unless self.result == :unreconciled 
+    return false unless self.result == :unreconciled
     return false unless self.withdraw_ids            
-    return false unless self.withdraw_ids.split(",").size == self.withdraws.size
+    return false unless match_all_withdraws?
     return true
   end
 
@@ -85,17 +95,27 @@ class TransferOut < ApplicationRecord
     self.lodged_amount = sum_up_withdraws("sum")
     self.fee = sum_up_withdraws("fee")
     withdraw_amount = sum_up_withdraws("amount")
-    if self.amount == withdraw_amount
+    if match_all_withdraws? && self.amount == withdraw_amount
+      self.error_info = nil
       self.result = :reconciled
-    else
+    elsif match_all_withdraws?
       self.error_info = "Amount not even: [Bank transfer-out: #{self.amount}, Withdraw Amount: #{withdraw_amount}]"
       self.result = :error
+    else
+      self.error_info = "Missing withdraw: '#{self.withdraw_ids.split(",").map{|id| id.to_i} - self.withdraws.pluck(:id)}''"
     end
     self.save
   end
 
+  def match_all_withdraws?
+    self.withdraw_ids.split(",").size == self.withdraws.size ? true : false
+  end
+
   def check_withdraw(withdraw_remote)
-    return "missing customer code or customer email" unless withdraw_remote[:customer_code] || withdraw_remote[:email] || withdraw_remote[:txid]
+    missings = [:customer_code, :email, :txid].inject([]) do |missing, key|
+      if withdraw_remote.has_key?(key) then missing else missing.push(key) end
+    end
+    return "missing params: '#{missing.join(",")}'" if missings.size > 0
     if self.customer_code == nil && self.email == nil
       self.customer_code = withdraw_remote[:customer_code]
       self.email = withdraw_remote[:email]
