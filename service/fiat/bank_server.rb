@@ -187,17 +187,17 @@ class BankServer
     response[:withdraw_id] = withdraw_remote["withdraw_id"]
     transfer = TransferOut.find(response[:transfer_id])
     withdraw = Withdraw.find_or_initialize_by(id: withdraw_remote["withdraw_id"])
-    if !withdraw.aasm_state && !withdraw.done_at && transfer && transfer.my_withdrawal?(response[:withdraw_id])
+    if !withdraw.aasm_state && !withdraw.done_at && transfer && transfer.my_withdrawal?(withdraw_remote, response)
       withdraw.set_values(withdraw_remote)
       if withdraw.save
-        transfer.withdraw_reconcile(withdraw_remote, withdraw, response)
+        transfer.withdraw_reconcile
       else
         response[:success] = false
         response[:error] = withdraw.errors.messages
       end
     else
       response[:success] = false
-      response[:error] = "withdraw was already matched or wrong transfer-out id"
+      response[:error] ||= "withdraw was already matched"
     end
   end
 

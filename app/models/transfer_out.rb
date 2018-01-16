@@ -20,22 +20,22 @@ class TransferOut < ApplicationRecord
     return false
   end
 
-  def withdraw_reconcile(withdraw_remote, withdraw, response)
-    errormsg = check_withdraw(withdraw_remote)
-    if errormsg
-      response[:success] = false
-      withdraw.error_info = errormsg
-      withdraw.save
-      response[:error] = errormsg
+  def withdraw_reconcile
+    if can_reconcile?
+      reconcile!
+      response[:success] = true
     else
-      if can_reconcile?
-        reconcile!
-        response[:success] = true
-      else
-        response[:success] = false
-        response[:error] = "transfer-out(id: '#{self.id}') has already matched all withdrawals"
-      end
+      response[:success] = false
+      response[:error] = "transfer-out(id: '#{self.id}') has already matched all withdrawals"
     end
+  end
+
+  def withdraws
+    Withdraw.where("id in (#{withdraw_ids})")
+  end
+
+  def my_withdrawal?(withdraw_remote, response)
+    self.withdraw_ids.split(",").include?(withdraw_remote["withdraw_id"]) if valid_params?(withdraw_remote, response)
   end
 
   def self.to_csv
@@ -68,14 +68,6 @@ class TransferOut < ApplicationRecord
         csv << attributes.map{ |attr| transfer.send(attr) }
       end
     end
-  end
-
-  def withdraws
-    Withdraw.where("id in (#{withdraw_ids})")
-  end
-
-  def my_withdrawal?(id)
-    self.withdraw_ids.split(",").include?(id)
   end
 
   private
@@ -111,15 +103,19 @@ class TransferOut < ApplicationRecord
     self.withdraw_ids.split(",").size == self.withdraws.size ? true : false
   end
 
-  def check_withdraw(withdraw_remote)
+  def valid_params?(withdraw_remote, response)
     missings = [:customer_code, :email, :txid].inject([]) do |missing, key|
       if withdraw_remote.has_key?(key) then missing else missing.push(key) end
     end
-    return "missing params: '#{missing.join(",")}'" if missings.size > 0
+    response[:error] = "missing params: '#{missing.join(",")}'" if missings.size > 0
+    response[:error] = check_customer(withdraw_remote, response) unless response[:error]
+    response[:error] ? false : true
+  end
+
+  def check_customer(withdraw_remote, response)
     if self.customer_code == nil && self.email == nil
       self.customer_code = withdraw_remote[:customer_code]
       self.email = withdraw_remote[:email]
-      self.save
       nil
     else
       return "customer code not match: [transfer-out: '#{self.customer_code}', withdraw: '#{withdraw_remote[:customer_code]}']" if self.customer_code != withdraw_remote[:customer_code]
