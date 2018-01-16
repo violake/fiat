@@ -29,11 +29,9 @@ RSpec.describe TransferOut, type: :model do
         #puts "initial : #{TransferOut.first.inspect}"
 
         #puts "to.withdraws : #{transfer_out.withdraws.inspect}"
-        puts "withdraw amount: #{withdraws[0].amount.to_f}"
-        puts "withdraw fee: #{withdraws[0].fee.to_f}"
-        puts "withdraw sum: #{withdraws[0].sum.to_f}"
         expect(transfer_out.send("can_reconcile?")).to eq(true)
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[0], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         puts "to: #{TransferOut.first.lodged_amount.to_f}"
 
         expect(response[:success]).to eq(true)
@@ -57,7 +55,8 @@ RSpec.describe TransferOut, type: :model do
 
         #puts "to.withdraws : #{transfer_out.withdraws.inspect}"
         expect(transfer_out.send("can_reconcile?")).to eq(true)
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[0], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
 
         expect(response[:success]).to eq(true)
         expect(TransferOut.first.result).to eq(:error)
@@ -72,18 +71,23 @@ RSpec.describe TransferOut, type: :model do
       it "error when params missing" do
         withdraw_remote = { email: "abc@123.com", customer_code: '123fds4'}
         response = {}
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[0], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         expect(response[:success]).to eq(false)
         expect(response[:error]).to match(/missing params: 'txid'/)
 
         withdraw_remote = { txid: 10001, customer_code: '123fds4'}
         response = {}
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         expect(response[:success]).to eq(false)
         expect(response[:error]).to match(/missing params: 'email'/)
         
         
         withdraw_remote = { txid: 10001, email: "abc@123.com"}
         response = {}
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         expect(response[:success]).to eq(false)
         expect(response[:error]).to match(/missing params: 'customer_code'/)
       end
@@ -93,7 +97,8 @@ RSpec.describe TransferOut, type: :model do
         transfer_out.save
         withdraw_remote = { txid: 10001, email: "abc@123.com", customer_code: '123fds4'}
         response = {}
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[0], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         expect(response[:success]).to eq(false)
         expect(response[:error]).to match(/txid not match: [transfer-out: '10002', withdraw: '10001']/)
 
@@ -113,7 +118,8 @@ RSpec.describe TransferOut, type: :model do
         withdraw_remote = { txid: 10001, email: "abc@123.com", customer_code: '123fds4'}
         response = {}
         expect(transfer_out.send("can_reconcile?")).to eq(true)
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[0], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         transfer_out = TransferOut.first
         expect(response[:success]).to eq(true)
         expect(transfer_out.lodged_amount).to eq(withdraws[0].amount)
@@ -124,7 +130,8 @@ RSpec.describe TransferOut, type: :model do
         # reconcile withdrawal 2
         withdraw_remote[:txid] = 10002
         expect(transfer_out.send("can_reconcile?")).to eq(true)
-        transfer_out.withdraw_reconcile(withdraw_remote, withdraws[1], response)
+        transfer_out.my_withdrawal?(withdraw_remote, response)
+        transfer_out.withdraw_reconcile
         transfer_out = TransferOut.first
         expect(response[:success]).to eq(true)
         expect(transfer_out.lodged_amount).to eq(withdraws[0].amount + withdraw[1].amount)

@@ -107,7 +107,7 @@ class TransferOut < ApplicationRecord
     missings = [:customer_code, :email, :txid].inject([]) do |missing, key|
       if withdraw_remote.has_key?(key) then missing else missing.push(key) end
     end
-    response[:error] = "missing params: '#{missing.join(",")}'" if missings.size > 0
+    response[:error] = "missing params: '#{missings.join(",")}'" if missings.size > 0
     response[:error] = check_customer(withdraw_remote, response) unless response[:error]
     response[:error] ? false : true
   end
