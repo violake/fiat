@@ -17,8 +17,7 @@ module Fiat
             transfer_out = self.find_or_initialize_by(source_id: transfer[:source_id], source_code: transfer[:source_code])
             if(transfer_out.valid_to_import?)
               transfer_out.set_values(transfer)
-              transfer_out.save
-              result[:imported] += 1
+              result[:imported] += 1 if transfer_out.save
               result[:error] += 1 if transfer_out.result == :error
             else
               result[:ignored] += 1

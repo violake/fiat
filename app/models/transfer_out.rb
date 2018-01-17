@@ -35,7 +35,7 @@ class TransferOut < ApplicationRecord
   end
 
   def my_withdrawal?(withdraw_remote, response)
-    return self.withdraw_ids.split(",").include?(withdraw_remote["withdraw_id"]) if valid_params?(withdraw_remote, response) && !match_all_withdraws?
+    return self.withdraw_ids.split(",").include?(withdraw_remote["withdraw_id"].to_s) if valid_params?(withdraw_remote, response) && !match_all_withdraws?
     false
   end
 
@@ -90,6 +90,7 @@ class TransferOut < ApplicationRecord
     if match_all_withdraws? && self.amount == withdraw_amount
       self.error_info = nil
       self.result = :reconciled
+      self.matched_at = Time.now
     elsif match_all_withdraws?
       self.error_info = "Amount not even: [Bank transfer-out: #{self.amount}, Withdraw Amount: #{withdraw_amount}]"
       self.result = :error
@@ -104,7 +105,7 @@ class TransferOut < ApplicationRecord
   end
 
   def valid_params?(withdraw_remote, response)
-    missings = [:customer_code, :email, :txid].inject([]) do |missing, key|
+    missings = ["customer_code", "email", "txid"].inject([]) do |missing, key|
       if withdraw_remote.has_key?(key) then missing else missing.push(key) end
     end
     response[:error] = "missing params: '#{missings.join(",")}'" if missings.size > 0
@@ -119,14 +120,14 @@ class TransferOut < ApplicationRecord
 
   def check_customer(withdraw_remote, response)
     if self.customer_code == nil && self.email == nil
-      self.customer_code = withdraw_remote[:customer_code]
-      self.email = withdraw_remote[:email]
+      self.customer_code = withdraw_remote["customer_code"]
+      self.email = withdraw_remote["email"]
       nil
     else
-      return "customer code not match: [transfer-out: '#{self.customer_code}', withdraw: '#{withdraw_remote[:customer_code]}']" if self.customer_code != withdraw_remote[:customer_code]
-      return "customer email not match: [transfer-out: '#{self.email}', withdraw: '#{withdraw_remote[:email]}']" if self.email != withdraw_remote[:email]
+      return "customer code not match: [transfer-out: '#{self.customer_code}', withdraw: '#{withdraw_remote["customer_code"]}']" if self.customer_code != withdraw_remote["customer_code"]
+      return "customer email not match: [transfer-out: '#{self.email}', withdraw: '#{withdraw_remote["email"]}']" if self.email != withdraw_remote["email"]
     end
-    "txid not match: [transfer-out: '#{self.txid}', withdraw: '#{withdraw_remote[:txid]}']" if self.txid != withdraw_remote[:txid]
+    "txid not match: [transfer-out: '#{self.txid}', withdraw: '#{withdraw_remote["txid"]}']" if self.txid != withdraw_remote["txid"]
   end
 
 end

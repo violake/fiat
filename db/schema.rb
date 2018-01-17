@@ -96,11 +96,10 @@ ActiveRecord::Schema.define(version: 20180115053017) do
   end
 
   create_table "withdraws", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.integer "transfer_out_id"
     t.string "sn"
     t.integer "account_id"
     t.integer "member_id"
-    t.integer "currency"
+    t.string "currency"
     t.decimal "amount", precision: 32, scale: 16
     t.decimal "fee", precision: 32, scale: 16
     t.string "fund_uid"
@@ -109,7 +108,7 @@ ActiveRecord::Schema.define(version: 20180115053017) do
     t.string "txid"
     t.string "aasm_state"
     t.decimal "sum", precision: 32, scale: 16, default: "0.0", null: false
-    t.string "type"
+    t.string "class_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

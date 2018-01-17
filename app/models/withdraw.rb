@@ -10,6 +10,7 @@ class Withdraw < ApplicationRecord
     self.currency = withdraw_remote["currency"]
     self.amount = withdraw_remote["amount"]
     self.fee = withdraw_remote["fee"]
+    self.sum = withdraw_remote["sum"]
     self.fund_uid = withdraw_remote["fund_uid"]
     self.fund_extra = withdraw_remote["fund_extra"]
     self.txid = withdraw_remote["txid"]
@@ -17,7 +18,6 @@ class Withdraw < ApplicationRecord
     self.created_at ||= withdraw_remote["created_at"]
     self.updated_at = withdraw_remote["updated_at"]
     self.done_at = withdraw_remote["done_at"]
-    self.type = withdraw_remote["type"]
-    self.transfer_out_id = withdraw_remote["transfer_in_id"]
+    self.class_name = withdraw_remote["type"]
   end
 end
