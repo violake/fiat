@@ -68,6 +68,8 @@ class FiatCLI < Thor
     raise "needs at least one option for this command. -e / -f " if options.size == 0
     rows = TransferIn.with_result(:error).to_csv
     if options[:to_email]
+      @opts[:subject] = "Deposit Reconciliation"
+      @opts[:filename] = "transfer-in_error"
       FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
     elsif options[:filename]
       puts "writing file"
@@ -88,6 +90,8 @@ class FiatCLI < Thor
     raise "needs at least one option for this command. -e / -f " if options.size == 0
     rows = TransferOut.without_result(:reconciled).to_csv
     if options[:to_email]
+      @opts[:subject] = "Withdrawal Reconciliation"
+      @opts[:filename] = "transfer-out_report"
       FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
     elsif options[:filename]
       puts "writing file"

@@ -17,7 +17,7 @@ cd $APP_PATH
 mkdir -p $WESTPAC_HISTORY
 
 curl -L "https://docs.google.com/spreadsheets/d/$key_westpac/export?exportFormat=csv" > /tmp/${WESTPAC_NAME}.csv 
-time_a="$TIME import Westpac Statement"
+time_a="$TIME import Westpac Transfer-out"
 log_a="$(./fiatCLI.rb importTransferOutCSV /tmp/$WESTPAC_NAME.csv -t $ZONE -a $WESTPAC_ACCOUNT)"
 cp /tmp/${WESTPAC_NAME}.csv $WESTPAC_HISTORY/${WESTPAC_NAME}_$DATE.csv
 
