@@ -80,6 +80,26 @@ class FiatCLI < Thor
     print_errormsg(e)
   end
 
+  desc "exportTransferOutErrorCSV", "export unreconciled and error transfer-out to csv file or send email with attachment"
+  method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
+  method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
+  method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
+  def exportTransferOutErrorCSV
+    raise "needs at least one option for this command. -e / -f " if options.size == 0
+    rows = TransferOut.without_result(:reconciled).to_csv
+    if options[:to_email]
+      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
+    elsif options[:filename]
+      puts "writing file"
+      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
+      puts "done"
+    else
+      puts "error input: #{options}"
+    end
+  rescue Exception=>e
+    print_errormsg(e)
+  end
+
   desc "updateTransferIn id", "update error transfer for reconciliation"
   method_option :bank_account, aliases: '-a', type: :string, required: false, desc: "account number which the transfer was transfered to."
   method_option :customer_code, aliases: '-c', type: :string, required: false, desc: "customer code for the account of a particular customer."

@@ -49,23 +49,18 @@ class TransferOut < ApplicationRecord
 
   def self.to_csv
     attributes = %w{id
-                    source_name
-                    source_code
-                    source_type
-                    country
+                    created_at
                     email
                     customer_code
-                    transfer_type
                     withdraw_ids
                     lodged_amount
                     amount
                     error_info
                     currency
-                    txid
                     description
-                    status
                     result
-                    created_at
+                    txid
+                    source_name
                     updated_at
                     matched_at
                     }
