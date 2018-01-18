@@ -26,7 +26,7 @@ class TransferOut < ApplicationRecord
       response[:success] = true
     else
       response[:success] = false
-      response[:error] = "transfer-out(id: '#{self.id}') has already matched all withdrawals"
+      response[:error] = "transfer-out(id: '#{self.id}') was reconciled or has no withdraw_ids"
     end
   end
 
@@ -35,8 +35,16 @@ class TransferOut < ApplicationRecord
   end
 
   def my_withdrawal?(withdraw_remote, response)
-    return self.withdraw_ids.split(",").include?(withdraw_remote["withdraw_id"].to_s) if valid_params?(withdraw_remote, response) && !match_all_withdraws?
-    false
+    if match_all_withdraws?
+      response[:error] = "transfer-out(id: '#{self.id}') already matched all withdrawals"
+      false
+    elsif !valid_params?(withdraw_remote, response)
+      false
+    else 
+      is_mine = self.withdraw_ids.split(",").include?(withdraw_remote["withdraw_id"].to_s) 
+      response[:error] = "withdraw(id: '#{withdraw_remote["withdraw_id"]}' doesn't match transfer-out(id:#{self.id}) - withdraw_ids: '#{self.withdraw_ids}'" unless is_mine
+      is_mine
+    end
   end
 
   def self.to_csv
