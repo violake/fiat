@@ -44,7 +44,7 @@ class FiatCLI < Thor
   end 
 
   desc "exportErrorCSV", "export error payments to csv file or send email with attachment"
-  method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
+  method_option :to_email, aliases: '-e', type: :array, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
   method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
   def exportErrorCSV
