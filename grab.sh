@@ -21,8 +21,7 @@ WESTPAC_NAME='Westpac_statement'
 BEYONG_HISTORY=path_to/history/beyond
 WESTPAC_HISTORY=path_to/history/westpac
 
-# array example: USER_EMAIL=('abc@aaa.com' 'ddd@sss.cn')
-USER_EMAIL=xxx@mail.com
+USER_EMAIL=('abc@aaa.com' 'ddd@sss.cn')
 
 mkdir -p $BEYONG_HISTORY
 mkdir -p $WESTPAC_HISTORY
@@ -44,4 +43,4 @@ body="\n$time_a\n$log_a\n\n$time_b\n$log_b\n"
 
 echo -e $body >> $LOG_FILE
 
-./fiatCLI.rb exportErrorCSV -e $USER_EMAIL -b "$body\nPlease find the attachment." >> $LOG_FILE
+./fiatCLI.rb exportErrorCSV -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
