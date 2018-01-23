@@ -21,6 +21,7 @@ WESTPAC_NAME='Westpac_statement'
 BEYONG_HISTORY=path_to/history/beyond
 WESTPAC_HISTORY=path_to/history/westpac
 
+# array example: USER_EMAIL=('abc@aaa.com' 'ddd@sss.cn')
 USER_EMAIL=xxx@mail.com
 
 mkdir -p $BEYONG_HISTORY
