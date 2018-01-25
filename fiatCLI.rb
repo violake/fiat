@@ -189,7 +189,7 @@ class FiatCLI < Thor
 
   def print_errormsg(e)
     puts "Error: #{e.message}"
-    puts e.backtrace.inspect
+    #puts e.backtrace.inspect
   end
 
   def get_bank_account_detail(bank_account, params=nil)

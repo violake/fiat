@@ -98,18 +98,20 @@ class BankServer
   end
 
   def resend
-    TransferIn.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |transfer|
-      transfer.result = :error
-      transfer.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
-      transfer.save
-    end
-    TransferIn.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, transfer|
-      response = {"command": "reconcile", "transfer": transfer}
-      AMQPQueue.enqueue(response)
-      @logger.debug "resent :#{response}"
-      transfer.send_times += 1
-      transfer.save
-      count += 1
+    [TransferIn.name,TransferOut.name].each do |transfer_class|
+      transfer_class.constantize.with_status(:sent).with_result(:unreconciled).where('send_times >= ?', @fiat_config[:resend_times]).each do |transfer|
+        transfer.result = :error
+        transfer.error_info = "Resend times over limitation #{@fiat_config[:resend_times]}"
+        transfer.save
+      end
+      transfer_class.constantize.with_status(:sent).with_result(:unreconciled).where('updated_at < ? and send_times < ?', Time.now.utc - @fiat_config[:resend_lag].minutes, @fiat_config[:resend_times]).inject(0) do |count, transfer|
+        response = {"command": "reconcile_#{transfer_class.underscore}", "#{transfer_class.underscore}": transfer}
+        AMQPQueue.enqueue(response)
+        @logger.debug "resent :#{response}"
+        transfer.send_times += 1
+        transfer.save
+        count += 1
+      end
     end
   end
 
