@@ -204,7 +204,7 @@ class BankServer
   end
 
   def save_error_transfer_out(params, response)
-    transfer = TransferOut.find(transfer_id)
+    transfer = TransferOut.find(params["transfer_id"])
     if !transfer.result_reconciled?
       transfer.error_info = params["error"]
       transfer.result = :error

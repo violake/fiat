@@ -1,3 +1,43 @@
+=====29 January 2018========
+
+# auto test for fiat
+
+## edit database.yml in testing server only
+
+```
+test:
+  <<: *default
+  database: db(same name as production)
+```
+
+## run test and check both import result and rspec result
+
+```
+./auto_test.sh
+
+[TASK]test start!
+[STEP]generate acx test data
+[STEP]generated
+[STEP]import statements
+[EXPECT] import result:
+{:imported=>4, :ignored=>0, :error=>1, :rejected=>1, :filtered=>0, :sent=>3}
+{:imported=>2, :ignored=>0, :error=>0, :rejected=>0, :filtered=>9, :sent=>2}
+{:imported=>7, :ignored=>0, :error=>2, :filtered=>4, :sent=>5}
+[RESULT]
+{:imported=>4, :ignored=>0, :error=>1, :rejected=>1, :filtered=>0, :sent=>3}
+{:imported=>2, :ignored=>0, :error=>0, :rejected=>0, :filtered=>9, :sent=>2}
+{:imported=>7, :ignored=>0, :error=>2, :filtered=>4, :sent=>5}
+[STEP]imported
+[STEP]check test result
+[STEP]***************************
+[RESULT] Passed all the tests!
+[STEP]***************************
+[STEP]destroy fiat test data
+[STEP]destroy acx test data
+[TASK]test done!
+```
+
+
 =====25 January 2018========
 
 # script for withdraw reconciliation
