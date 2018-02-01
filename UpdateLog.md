@@ -1,3 +1,18 @@
+=====1 Feburary 2018========
+
+# db migration
+
+## migrations that need to be run
+
+20180103042617_create_transfer_out
+20180110031505_edit_column_payment_transaction_id_to_deposits
+20180110032413_change_tablename_transfer_ins_to_payments
+20180110032917_edit_column_payment_type_to_transfer_ins
+20180112002249_add_column_lodged_amount_and_email_to_tranfer_out
+20180112055947_create_withdraws
+20180115053017_add_column_fee_to_transfer_outs
+
+
 =====29 January 2018========
 
 # auto test for fiat

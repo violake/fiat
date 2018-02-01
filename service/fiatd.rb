@@ -62,9 +62,7 @@ class Fiatd
       begin
         @busy = !@busy
         @logger.debug "request: #{payload}"
-        tokens = JSON::parse(payload)
-
-        raise Exception unless tokens["transfer_type"]
+        tokens = payload_to_hash(payload)
 
         @server = @fiat_server.send(tokens["transfer_type"].downcase)
 
@@ -88,9 +86,10 @@ class Fiatd
         @ch.ack(delivery.delivery_tag)
 
       rescue FiatServiceError => e
+        response ||= {}
         response[:error_code] = e.code
         response[:error_message] = e.inspect
-        response[:params] = params
+        response[:params] = params if defined? params
         @logger.error "response : #{response} debug_info: #{e.backtrace[0..2]}"
         AMQPQueue.enqueue(response)
         @ch.ack(delivery.delivery_tag)
@@ -130,6 +129,23 @@ class Fiatd
 
   private
 
+    #==== convert a payload(json) to hash
+    #
+    #  payload : string
+    #  return  : hash
+    #  raise   : IlleagalRequestError
+    #
+    #  convert payload(json) to hash if possible
+    #  example:  "{\"command\":\"getbalance\",\"currency\":\"aud\",\"params\":\"\"}" ->  {"command"=>"getbalance", "currency"=>"aud", "params"=>""}
+    #
+    def payload_to_hash(payload)
+      tokens = JSON::parse(payload)
+      raise JSON::ParserError if !tokens.is_a?(Hash) || !tokens["transfer_type"] || !tokens["command"] || !@fiat_config[:fiat][:transfer_type].include?(tokens["transfer_type"].downcase)
+      tokens
+    rescue JSON::ParserError=>e
+      raise IlleagalRequestError, payload
+    end
+  
   #
   #==== Convert a command to method name
   #
