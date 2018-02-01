@@ -1,8 +1,52 @@
 =====1 Feburary 2018========
 
-# db migration
+# deploy withdrawal reconciliation to FIAT server
 
-## migrations that need to be run
+## build
+
+### old way
+
+```
+git pull origin release
+bundle exec install --path=vendor/bundle
+bundle exec rake build
+```
+
+### new way
+
+use the package built by jenkins
+
+## disable cronjob
+
+```
+server > crontab -e
+#0 21-23,0-9 * * * export PATH=/home/app/.rbenv/shims:/home/app/.rbenv/bin:/usr/bin:$PATH; eval "$(rbenv init -)"; cd /home/app/fiat/shared && RAILS_ENV=production ./grab.sh
+```
+
+## stop fiat daemons
+
+```
+server > supervisorctl stop fiatd fiatd_resend
+```
+
+## deploy to the fiat server
+
+## modify fiat.yml
+```
+...
+-  payment_type: ["bank"]
++  transfer_type: ["bank"]
+...
+westpac:
+  bank_account_regex: \d{12}|\d{14}
+-  import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
++  import_transfer_in_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
++  import_transfer_out_categories: ["PAYMENT"]    -- white list for import withdraw of westpac statement
++  transfer_out_withdrawal_regex: \d+             -- regex for capture withdraw ids
+...
+```
+
+## db migration
 
 20180103042617_create_transfer_out
 20180110031505_edit_column_payment_transaction_id_to_deposits
@@ -11,6 +55,59 @@
 20180112002249_add_column_lodged_amount_and_email_to_tranfer_out
 20180112055947_create_withdraws
 20180115053017_add_column_fee_to_transfer_outs
+
+### migrate after deploy release package to server
+
+```
+local > ssh server
+server > mkdir /home/app/fiat/current/db/migrate
+server > exit
+local > scp 20180103042617_create_transfer_out server:/home/app/fiat/current/db/migrate
+local > scp 20180110031505_edit_column_payment_transaction_id_to_deposits serve:/home/app/fiat/current/db/migrate
+local > scp 20180110032413_change_tablename_transfer_ins_to_payments serve:/home/app/fiat/current/db/migrate
+local > scp 20180110032917_edit_column_payment_type_to_transfer_ins serve:/home/app/fiat/current/db/migrate
+local > scp 20180112002249_add_column_lodged_amount_and_email_to_tranfer_out serve:/home/app/fiat/current/db/migrate
+local > scp 20180112055947_create_withdraws serve:/home/app/fiat/current/db/migrate
+local > scp 20180115053017_add_column_fee_to_transfer_outs serve:/home/app/fiat/current/db/migrate
+
+local > ssh server
+server > cd /home/app/fiat/current
+server > bin/rake db:migrate
+```
+
+## start daemon
+
+```
+server > supervisorctl start fiatd fiatd_resend
+```
+
+## check daemon is running and daemon error log if all green continue
+
+```
+server > supervisorctl status
+...
+server > tail -100 /home/app/fiat/shared/log/fiatd-error.log
+server > tail -100 /home/app/fiat/shared/log/fiatd_resend-error.log
+```
+
+
+## add new cronjob
+
+### copy the new cronjob of withdrawal reconciliation
+
+```
+server > cp /home/app/fiat/current/grab_transfer-out.sh /home/app/fiat/shared
+```
+
+### edit crontab
+
+```
+server > crontab -e
+0 21-23,0-9 * * * export PATH=/home/app/.rbenv/shims:/home/app/.rbenv/bin:/usr/bin:$PATH; eval "$(rbenv init -)"; cd /home/app/fiat/shared && RAILS_ENV=production ./grab.sh
+0 21-23,0-9 * * * export PATH=/home/app/.rbenv/shims:/home/app/.rbenv/bin:/usr/bin:$PATH; eval "$(rbenv init -)"; cd /home/app/fiat/shared && RAILS_ENV=production ./grab_transfer-out.sh
+```
+
+## deploy done
 
 
 =====29 January 2018========

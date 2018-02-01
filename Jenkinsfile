@@ -43,7 +43,7 @@ node {
 			sh "bin/deploy.sh ${server} ${theme}"
 		}
 
-		if (env.BRANCH_NAME == "master") {
+		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "withdraw_reconciliation") {
 			sh "bin/deploy.sh ${server} ${theme}"
 		}
 	}
