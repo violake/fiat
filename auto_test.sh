@@ -22,9 +22,9 @@ echo "[EXPECT] import result:
 {:imported=>7, :ignored=>0, :error=>2, :filtered=>4, :sent=>5}"
 echo "[RESULT]"
 
-./fiatCLI.rb importCSV spec/auto_test/Beyond_statement_auto.csv  -t $ZONE -a $BEYOND_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
-./fiatCLI.rb importCSV spec/auto_test/Westpac_statement_auto.csv -t $ZONE -a $WESTPAC_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
-./fiatCLI.rb importTransferOutCSV spec/auto_test/Westpac_statement_auto.csv -t $ZONE -a $WESTPAC_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
+./fiatCLI.rb importCSV spec/Beyond_statement_auto.csv  -t $ZONE -a $BEYOND_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
+./fiatCLI.rb importCSV spec/Westpac_statement_auto.csv -t $ZONE -a $WESTPAC_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
+./fiatCLI.rb importTransferOutCSV spec/Westpac_statement_auto.csv -t $ZONE -a $WESTPAC_ACCOUNT || { echo "[ERROR]command failed"; exit 1; }
 echo "[STEP]imported"
 sleep 5
 echo "[STEP]check test result"
@@ -34,6 +34,7 @@ echo "[STEP]***************************"
 echo "[STEP]destroy fiat test data"
 bundle exec rake test_data:destroy_fiat_data || { echo "[ERROR]command failed"; exit 1; }
 echo "[STEP]destroy acx test data"
+cd $ACX_PATH
 bundle exec rake test_data:destroy_fiat_data || { echo "[ERROR]command failed"; exit 1; }
 
 echo "[TASK]test done!"

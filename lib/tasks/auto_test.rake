@@ -49,9 +49,9 @@ namespace :test_data do
 
   def check_transfer_out
     check_transfer_out_success_case(FIAT_TRANSFER_OUT_DESCRIPTION[0], 
-                                    '6cnokw', 'roger@test.com', 659.34, 666, 6.66, 1)                     &&
+                                    '6cnokw', 'roger@test.com', 646, 666, 20, 1)                          &&
     check_transfer_out_success_case(FIAT_TRANSFER_OUT_DESCRIPTION[1], 
-                                    '6cnokw', 'roger@test.com', 1318.68, 1332, 13.32, 2)                  &&
+                                    '6cnokw', 'roger@test.com', 1292, 1332, 40, 2)                        &&
     check_transfer_error_case('TransferOut', FIAT_TRANSFER_OUT_DESCRIPTION[2], 
                                 'unreconciled', "Missing withdraw: '[12006]'", 3)                         &&
     check_transfer_error_case('TransferOut', FIAT_TRANSFER_OUT_DESCRIPTION[3], 
