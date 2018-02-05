@@ -1,16 +1,16 @@
 require 'rails_helper'
 
-RSpec.describe PaymentsController, type: :controller do
-  let!(:new_payments) { create_list(:new_payment, 10) }
-  let!(:error_payments) { create_list(:error_payment, 3) }
-  let!(:reconciled_payments) { create_list(:reconciled_payment, 7) }
-  let!(:unreconciled_payments) { create_list(:unreconciled_payment, 5) }
+RSpec.describe TransferInsController, type: :controller do
+  let!(:new_transfers) { create_list(:new_transfer, 10) }
+  let!(:error_transfers) { create_list(:error_transfer, 3) }
+  let!(:reconciled_transfers) { create_list(:reconciled_transfer, 7) }
+  let!(:unreconciled_transfers) { create_list(:unreconciled_transfer, 5) }
 
   before {
     session[:member_id] = 2
   }
 
-  describe "get /payments paginate and filter test" do
+  describe "get /transfers paginate and filter test" do
     
     it "When no paginate or filter" do
       get :index
@@ -90,7 +90,7 @@ RSpec.describe PaymentsController, type: :controller do
 
   end
 
-  describe "get /payments/export filter test" do
+  describe "get /transfers/export filter test" do
 
     it "When status = new and result = error" do
       params = { "status"=>"new", "result"=>"error" }
@@ -118,7 +118,7 @@ RSpec.describe PaymentsController, type: :controller do
 
   end
 
-  describe "get /payments/export filter test" do
+  describe "get /transfers/export filter test" do
     it "When before 15 days" do
       params = { "archive_before"=>Time.now - 15.days}
       get :archive, params: params

@@ -14,6 +14,10 @@ class InvalidCommand < FiatServiceError
   def code; "ef100"; end
 end
 
+class IlleagalRequestError < FiatServiceError
+  def code; "ef100"; end
+end
+
 class InvalidArgumentError < FiatServiceError
   def code; "ef101"; end
 end

@@ -25,3 +25,5 @@ test.rb
 payments_testdata.csv
 PEAK INTERNATIONAL WESTPAC STATEMENT.csv
 Beyond Banking statement.csv
+/history
+/vendor

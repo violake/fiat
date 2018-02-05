@@ -28,12 +28,12 @@ node {
 		sh "echo bin/test.sh"
 	}
 	stage('Build') {
-		if (env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master') {
+		if (env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'withdraw_reconciliation') {
 			sh "bin/build.sh ${theme}"
 		}
 	}
 	stage('Archive') {
-		if (env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master') {
+		if (env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'withdraw_reconciliation') {
 			archiveArtifacts 'releases/*.tar.gz'
 		}
 	}
@@ -43,7 +43,7 @@ node {
 			sh "bin/deploy.sh ${server} ${theme}"
 		}
 
-		if (env.BRANCH_NAME == "master") {
+		if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "withdraw_reconciliation") {
 			sh "bin/deploy.sh ${server} ${theme}"
 		}
 	}

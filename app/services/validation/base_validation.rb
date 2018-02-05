@@ -1,6 +1,6 @@
 module Fiat
   class BaseValidation
-    def self.validate(payment)
+    def self.validate(transfer)
       @error = ""
       return @error.size == 0 ? true : false, @error
     end

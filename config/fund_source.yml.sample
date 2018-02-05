@@ -1,2 +1,9 @@
 ---
 fund_timestamp: 2017-10-12 19:41:41.401852100 +11:00
+fiat_accounts:
+  aud:
+    bank_accounts:
+    - bank: bank
+      account_name: Test Account
+      bsb: '111111'
+      account_number: '222222'

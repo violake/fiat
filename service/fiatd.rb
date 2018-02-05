@@ -53,7 +53,7 @@ class Fiatd
   #
   # for future onboard more currencies
   # set @server to different fiat-server
-  # e.g. @server = Server.new(tokens["payment_type"])
+  # e.g. @server = Server.new(tokens["transfer_type"])
   def start
     #raise RemainAlmostDoneError if remain_doing?
     queue = @ch.queue(@fiat_config[:queue][:request][:name], :durable => true)
@@ -62,11 +62,9 @@ class Fiatd
       begin
         @busy = !@busy
         @logger.debug "request: #{payload}"
-        tokens = JSON::parse(payload)
+        tokens = payload_to_hash(payload)
 
-        raise Exception unless tokens["payment_type"]
-
-        @server = @fiat_server.send(tokens["payment_type"].downcase)
+        @server = @fiat_server.send(tokens["transfer_type"].downcase)
 
         response = {
           command: tokens["command"],
@@ -88,9 +86,10 @@ class Fiatd
         @ch.ack(delivery.delivery_tag)
 
       rescue FiatServiceError => e
+        response ||= {}
         response[:error_code] = e.code
         response[:error_message] = e.inspect
-        response[:params] = params
+        response[:params] = params if defined? params
         @logger.error "response : #{response} debug_info: #{e.backtrace[0..2]}"
         AMQPQueue.enqueue(response)
         @ch.ack(delivery.delivery_tag)
@@ -130,6 +129,23 @@ class Fiatd
 
   private
 
+    #==== convert a payload(json) to hash
+    #
+    #  payload : string
+    #  return  : hash
+    #  raise   : IlleagalRequestError
+    #
+    #  convert payload(json) to hash if possible
+    #  example:  "{\"command\":\"getbalance\",\"currency\":\"aud\",\"params\":\"\"}" ->  {"command"=>"getbalance", "currency"=>"aud", "params"=>""}
+    #
+    def payload_to_hash(payload)
+      tokens = JSON::parse(payload)
+      raise JSON::ParserError if !tokens.is_a?(Hash) || !tokens["transfer_type"] || !tokens["command"] || !@fiat_config[:fiat][:transfer_type].include?(tokens["transfer_type"].downcase)
+      tokens
+    rescue JSON::ParserError=>e
+      raise IlleagalRequestError, payload
+    end
+  
   #
   #==== Convert a command to method name
   #
@@ -209,15 +225,31 @@ class Fiatd
   #
   # params: hash
   # {
-  #   payment_id : Integer
+  #   transfer_id : Integer
   #   deposit    : Hash
   # }
   #
-  # return: boolean - deposit mapping payment successfully or not
+  # return: boolean - deposit mapping transfer successfully or not
   #
   #
   def cmd_autodeposit params
     @server.autodeposit(params)
+  end
+
+  #
+  # ==== withdraw
+  #
+  # params: hash
+  # {
+  #   transfer_id : Integer
+  #   deposit    : Hash
+  # }
+  #
+  # return: boolean - deposit mapping transfer successfully or not
+  #
+  #
+  def cmd_autowithdraw params
+    @server.autowithdraw(params)
   end
 
   #

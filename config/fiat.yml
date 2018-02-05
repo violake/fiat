@@ -1,5 +1,5 @@
 fiat: &default
-  payment_type: ["bank"]
+  transfer_type: ["bank"]
   log_level: DEBUG
   archive_limit: 7
   search_day_diff: 3
@@ -18,7 +18,9 @@ bank:
 
 westpac:
   bank_account_regex: \d{12}|\d{14}
-  import_filter_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
+  import_transfer_in_categories: ["DEP", "CREDIT", "ATM", "OTHER", "DEBIT", "FEE"]
+  import_transfer_out_categories: ["PAYMENT"]
+  transfer_out_withdrawal_regex: \d+
 
 fiat_email:
   server: 'smtp.gmail.com'
@@ -31,4 +33,4 @@ fiat_email:
   subject: "Bank statement Import Result"
   starttls: true
   body: 'Please find the attachment.'
-  admin_email: ['roger.fang@acx.io', 'violake@foxmail.com']
+  admin_email: ['roger.fang@acx.io']
