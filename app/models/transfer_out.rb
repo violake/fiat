@@ -47,6 +47,10 @@ class TransferOut < ApplicationRecord
     end
   end
 
+  def self.with_date(start_date, end_date=start_date+1.days)
+    self.where('created_at >= ? and created_at < ?', start_date, end_date)
+  end
+
   def self.to_csv
     attributes = %w{id
                     created_at
@@ -54,14 +58,12 @@ class TransferOut < ApplicationRecord
                     customer_code
                     withdraw_ids
                     lodged_amount
+                    fee
                     amount
+                    result
                     error_info
                     currency
                     description
-                    result
-                    txid
-                    source_name
-                    updated_at
                     matched_at
                     }
 
