@@ -8,8 +8,10 @@ require_relative './config/fiat_config'
 require_relative './service/fiat-mailer'
 require_relative './util/fiatd_logger'
 require_relative './service/fiatd-server'
+require './util/timezone'
 
 class FiatCLI < Thor
+  include Fiat::Timezone
 
   def initialize(args = [], local_options = {}, config = {})
     super(args, local_options, config)
@@ -83,15 +85,18 @@ class FiatCLI < Thor
   end
 
   desc "exportTransferOutErrorCSV", "export unreconciled and error transfer-out to csv file or send email with attachment"
+  method_option :zone_name, aliases: '-z', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
+  method_option :date, aliases: '-d', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
   method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
   method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
-  def exportTransferOutErrorCSV
-    raise "needs at least one option for this command. -e / -f " if options.size == 0
-    rows = TransferOut.without_result(:reconciled).to_csv
+  def exportTransferOutDailyReportCSV
+    raise "parameters not sufficient -z, -d, -e/-f" if options.size < 3
+    date = confert_time_by_zone_name(options[:date], options[:zone_name])
+    rows = TransferOut.with_date(date).to_csv
     if options[:to_email]
       @opts[:subject] = "Withdrawal Reconciliation"
-      @opts[:filename] = "transfer-out_report"
+      @opts[:filename] = "transfer-out_report_#{options[:date]}"
       FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
     elsif options[:filename]
       puts "writing file"
