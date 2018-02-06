@@ -4,7 +4,6 @@ APP_PATH=/home/app/fiat/current
 
 key_westpac=1Nf1d6OL01X6KbSBPW5UNAU20N67zXbR5_-uZe3DHuWc
 WESTPAC_ACCOUNT='033152-468666'
-USER_EMAIL=('roger.fang@acx.io')
 
 DATE=$(date +"%d-%m-%y_%H-%M")
 TIME=$(date +"%d-%m-%y %H:%M")
@@ -26,5 +25,3 @@ cp /tmp/${WESTPAC_NAME}.csv $WESTPAC_HISTORY/${WESTPAC_NAME}_$DATE.csv
 body="\n$time_a\n$log_a\n\n"
 
 echo -e $body >> $LOG_FILE
-
-#./fiatCLI.rb exportTransferOutErrorCSV -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
