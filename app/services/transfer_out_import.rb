@@ -26,12 +26,11 @@ module Fiat
         @csv_path = File.expand_path(file)
         transaction_import(params)
         @result
-      rescue Exception=>e
-        error_msg = e.message.start_with?("Illegal quoting") ?  "Error Type of File: File should be csv" : e.message
-        puts error_msg
-        puts e.backtrace.inspect
+      rescue CSV::MalformedCSVError=>e
+        error_msg = e.message.start_with?("Illegal quoting") ?  "File should be csv" : e.message
+        raise "Import failed - Error Type of File: #{error_msg}"
       ensure
-        timezone_reset if timezone_changed?
+        timezone_reset
       end
     end
     
