@@ -86,8 +86,8 @@ class FiatCLI < Thor
   end
 
   desc "exportTransferOutDailyReportCSV", "export unreconciled and error transfer-out to csv file or send email with attachment"
-  method_option :zone_name, aliases: '-z', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
-  method_option :date, aliases: '-d', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
+  method_option :zone_name, aliases: '-z', type: :string, required: true, desc: "local timezone name, eg: 'Australia/Melbourne'"
+  method_option :date, aliases: '-d', type: :string, required: true, desc: "local date, eg: '20180109'"
   method_option :to_email, aliases: '-e', type: :array, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
   method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
@@ -107,6 +107,18 @@ class FiatCLI < Thor
     else
       puts "error input: #{options}"
     end
+  rescue Exception=>e
+    print_errormsg(e)
+  end
+
+  desc "send_simple_email", "send email to email specified"
+  method_option :subject, aliases: '-s', type: :string, required: true, desc: "Subject for email, eg: 'Withdraw Reconciliation'"
+  method_option :to_email, aliases: '-e', type: :array, required: true, desc: "email address for whom you need to inform."
+  method_option :body, aliases: '-b', type: :string, required: true, desc: "body for the email."
+  def send_simple_email
+    @opts[:subject] = options[:subject]
+    @opts[:body] = options[:body]
+    FiatMailer.send_email(options[:to_email], @opts) 
   rescue Exception=>e
     print_errormsg(e)
   end
