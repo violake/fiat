@@ -68,14 +68,15 @@ class FiatCLI < Thor
   method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
   def exportErrorCSV
     raise "needs at least one option for this command. -e / -f " if options.size == 0
-    rows = TransferIn.with_result(:error).to_csv
+    rows = TransferIn.with_result(:error)
+    puts "export #{rows.size} rows of error data"
     if options[:to_email]
       @opts[:subject] = "Deposit Reconciliation"
       @opts[:filename] = "transfer-in_error"
-      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
+      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows.to_csv) 
     elsif options[:filename]
       puts "writing file"
-      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
+      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows.to_csv) 
       puts "done"
     else
       puts "error input: #{options}"
@@ -84,23 +85,24 @@ class FiatCLI < Thor
     print_errormsg(e)
   end
 
-  desc "exportTransferOutErrorCSV", "export unreconciled and error transfer-out to csv file or send email with attachment"
+  desc "exportTransferOutDailyReportCSV", "export unreconciled and error transfer-out to csv file or send email with attachment"
   method_option :zone_name, aliases: '-z', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
   method_option :date, aliases: '-d', type: :string, required: true, desc: "local timezone, eg: '+08:00'"
-  method_option :to_email, aliases: '-e', type: :string, required: false, desc: "email address for whom you need to inform."
+  method_option :to_email, aliases: '-e', type: :array, required: false, desc: "email address for whom you need to inform."
   method_option :filename, aliases: '-f', type: :string, required: false, desc: "file name for the csv."
   method_option :body, aliases: '-b', type: :string, required: false, desc: "body for the email."
   def exportTransferOutDailyReportCSV
     raise "parameters not sufficient -z, -d, -e/-f" if options.size < 3
     date = confert_time_by_zone_name(options[:date], options[:zone_name])
-    rows = TransferOut.with_date(date).to_csv
+    rows = TransferOut.with_date('updated_at', date)
+    puts "#{rows.size} rows data in report"
     if options[:to_email]
-      @opts[:subject] = "Withdrawal Reconciliation"
+      @opts[:subject] = "Withdrawal Reconciliation-#{options[:date]}"
       @opts[:filename] = "transfer-out_report_#{options[:date]}"
-      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows) 
+      FiatMailer.send_email(options[:to_email], options[:body] ? @opts.merge!({body: options[:body]}) : @opts, rows.to_csv) 
     elsif options[:filename]
       puts "writing file"
-      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows) 
+      File.write("#{options[:filename]}_#{DateTime.parse(Time.now.to_s).strftime('%Y%m%d_%H:%M_%Z')}.csv", rows.to_csv) 
       puts "done"
     else
       puts "error input: #{options}"

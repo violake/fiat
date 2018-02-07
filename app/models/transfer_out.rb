@@ -47,8 +47,8 @@ class TransferOut < ApplicationRecord
     end
   end
 
-  def self.with_date(start_date, end_date=start_date+1.days)
-    self.where('created_at >= ? and created_at < ?', start_date, end_date)
+  def self.with_date(date_column, start_date, end_date=start_date+1.days)
+    self.where("#{date_column} >= ? and #{date_column} < ?", start_date, end_date)
   end
 
   def self.to_csv
