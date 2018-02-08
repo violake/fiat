@@ -1,27 +1,27 @@
 #!/bin/bash                                                                                                                                                                                    
 
 #source /home/app/.deployrc                     
-APP_PATH=path_to/fiat/
+APP_PATH=/home/app/fiat/current/
 
-key_beyond=1rOvx90qcMiLWSAL-aUO2qmp0p4VEGTzSUsIeQZYpR24
-key_westpac=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+key_beyond=1ueNaxOIAMcs2UgakORik6Q4sWb1I_xSoMGuonyKORyY
+key_westpac=1d_xD0N6oCsRpPGGVtVYn3UXZh5krJMW301j0J1ZpsJ8
 
-DATE=$(date +"%d-%m-%y")
-TIME=$(date +"%d-%m-%y %H:%M")
+DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y_%H-%M")
+TIME=$(TZ=Australia/Melbourne date +"%d-%m-%Y %H:%M")
 ZONE=$(TZ=Australia/Melbourne date +'%z'| cut -c1-3)':00'
 
 BEYOND_ACCOUNT='805022-03651883'
 WESTPAC_ACCOUNT='033152-468666'
 
-LOG_FILE=path_to/history/grab.log
+LOG_FILE=/home/app/fiat/history/grab.log
 
 BEYOND_NAME='Beyond_statement'
 WESTPAC_NAME='Westpac_statement'
 
-BEYONG_HISTORY=path_to/history/beyond
-WESTPAC_HISTORY=path_to/history/westpac
+BEYONG_HISTORY=/home/app/fiat/history/beyond
+WESTPAC_HISTORY=/home/app/fiat/history/westpac
 
-USER_EMAIL=('abc@aaa.com' 'ddd@sss.cn')
+USER_EMAIL=('vicky.zhang@acx.io' 'una.fu@acx.io')
 
 mkdir -p $BEYONG_HISTORY
 mkdir -p $WESTPAC_HISTORY
@@ -43,4 +43,4 @@ body="\n$time_a\n$log_a\n\n$time_b\n$log_b\n"
 
 echo -e $body >> $LOG_FILE
 
-./fiatCLI.rb exportErrorCSV -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
+./fiatCLI.rb exportErrorCSV -t "$TIME" -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
