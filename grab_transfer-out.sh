@@ -6,13 +6,14 @@ key_westpac=1Nf1d6OL01X6KbSBPW5UNAU20N67zXbR5_-uZe3DHuWc
 WESTPAC_ACCOUNT='033152-468666'
 USER_EMAIL=('vicky.zhang@acx.io')
 
+EMAIL_DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y")
 DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y_%H-%M")
 TIME=$(TZ=Australia/Melbourne date +"%d-%m-%Y %H:%M")
 ZONE=$(TZ=Australia/Melbourne date +'%z'| cut -c1-3)':00'
 LOG_FILE=/home/app/fiat/history/grab_transfer-out.log
 WESTPAC_NAME='Westpac_transfer-out'
 WESTPAC_HISTORY=/home/app/fiat/history/westpac
-SUBJECT="Withdrawal import result $TIME"
+SUBJECT="Withdrawal import result $EMAIL_DATE"
 
 cd $APP_PATH
 mkdir -p $WESTPAC_HISTORY

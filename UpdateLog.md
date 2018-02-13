@@ -1,3 +1,42 @@
+=====13 Feburary 2018========
+
+# grab script email subject change
+
+## modify grab.sh
+
+add line before DATE
+```
+EMAIL_DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y")
+```
+
+edit line
+from
+```
+./fiatCLI.rb exportErrorCSV -t "$TIME" -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
+```
+to
+```
+./fiatCLI.rb exportErrorCSV -t "$EMAIL_DATE" -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
+```
+
+## modify grab_transfer-out.sh
+
+add line before DATE
+```
+EMAIL_DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y")
+```
+
+edit line
+from
+```
+SUBJECT="Withdrawal import result $TIME"
+```
+to
+```
+SUBJECT="Withdrawal import result $EMAIL_DATE"
+```
+
+
 =====1 Feburary 2018========
 
 # deploy withdrawal reconciliation to FIAT server
