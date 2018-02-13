@@ -6,6 +6,7 @@ APP_PATH=/home/app/fiat/current/
 key_beyond=1ueNaxOIAMcs2UgakORik6Q4sWb1I_xSoMGuonyKORyY
 key_westpac=1d_xD0N6oCsRpPGGVtVYn3UXZh5krJMW301j0J1ZpsJ8
 
+EMAIL_DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y")
 DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y_%H-%M")
 TIME=$(TZ=Australia/Melbourne date +"%d-%m-%Y %H:%M")
 ZONE=$(TZ=Australia/Melbourne date +'%z'| cut -c1-3)':00'
@@ -43,4 +44,4 @@ body="\n$time_a\n$log_a\n\n$time_b\n$log_b\n"
 
 echo -e $body >> $LOG_FILE
 
-./fiatCLI.rb exportErrorCSV -t "$TIME" -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
+./fiatCLI.rb exportErrorCSV -t "$EMAIL_DATE" -e ${USER_EMAIL[@]} -b "$body\nPlease find the attachment." >> $LOG_FILE
