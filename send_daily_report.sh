@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP_PATH=/home/app/fiat/current
-USER_EMAIL=('vicky.zhang@acx.io')
+USER_EMAIL=('vicky.zhang@acx.io' 'una.fu@acx.io')
 LOG_FILE=/home/app/fiat/history/grab_transfer-out.log
 
 TIME=$(TZ=Australia/Melbourne date +"%d-%m-%Y %H:%M")
