@@ -1,3 +1,19 @@
+=====19 Feburary 2018========
+
+# withdrawal reconciliation email to Vicky and Una
+
+## modify /home/app/fiat/shared/grab_transfer-out.sh
+
+```
+USER_EMAIL=('vicky.zhang@acx.io' 'una.fu@acx.io')
+```
+
+## modify /home/app/fiat/shared/send_daily_report.sh
+
+```
+USER_EMAIL=('vicky.zhang@acx.io' 'una.fu@acx.io')
+```
+
 =====13 Feburary 2018========
 
 # grab script email subject change

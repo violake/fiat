@@ -4,7 +4,7 @@ APP_PATH=/home/app/fiat/current
 
 key_westpac=1Nf1d6OL01X6KbSBPW5UNAU20N67zXbR5_-uZe3DHuWc
 WESTPAC_ACCOUNT='033152-468666'
-USER_EMAIL=('vicky.zhang@acx.io')
+USER_EMAIL=('vicky.zhang@acx.io' 'una.fu@acx.io')
 
 EMAIL_DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y")
 DATE=$(TZ=Australia/Melbourne date +"%d-%m-%Y_%H-%M")
