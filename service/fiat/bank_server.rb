@@ -201,6 +201,8 @@ class BankServer
       response[:success] = false
       response[:error] ||= "withdraw was already matched"
     end
+  rescue ActiveRecord::StatementInvalid => e
+    raise IlleagalRequestError, withdraw_remote
   end
 
   def save_error_transfer_out(params, response)
