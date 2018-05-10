@@ -83,25 +83,25 @@ RSpec.describe TransferIn, type: :model do
 
   describe "capture customer code" do
     it "return correct code when one code given" do
-      bank[:description] = "Direct Credit Go MEACHAM 3c3k37"
+      bank[:description] = "Direct Credit Go MEACHAM v2bmr8"
       transfer_in.set_values(bank)
-      expect(transfer_in.customer_code).to eq("3c3k37")
+      expect(transfer_in.customer_code).to eq("v2bmr8")
     end
 
     it "return correct upcase code when one code given" do
-      bank[:description] = "Direct Credit Go MEACHAM 3C3K37"
+      bank[:description] = "Direct Credit Go MEACHAM v2bMR8"
       transfer_in.set_values(bank)
-      expect(transfer_in.customer_code).to eq("3c3k37")
+      expect(transfer_in.customer_code).to eq("v2bmr8")
     end
 
     it "return correct code when one correct code and one error code given" do
-      bank[:description] = "Direct Credit Go MEACHAM 3d2343 3c3k37"
+      bank[:description] = "Direct Credit Go MEACHAM 3d2343 v2bmr8"
       transfer_in.set_values(bank)
-      expect(transfer_in.customer_code).to eq("3c3k37")
+      expect(transfer_in.customer_code).to eq("v2bmr8")
 
-      bank[:description] = "Direct Credit Go MEACHAM 3c3k37 3d2343"
+      bank[:description] = "Direct Credit Go MEACHAM v2bmr8 vibmr8"
       transfer_in.set_values(bank)
-      expect(transfer_in.customer_code).to eq("3c3k37")
+      expect(transfer_in.customer_code).to eq("v2bmr8")
     end
 
     it "return nil when error code given" do

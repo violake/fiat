@@ -1,4 +1,4 @@
 "source_id","source_name","source_code","country","transfer_type","amount","currency","available","description","sender_info","created_at","updated_at"
 "06398010987329","CBA","import_code1","Australia","Bank","100","aud","true","net bank transfer, id:107","CBA, Richard, 28th Aug, general use","2017-08-27T03:55:31Z","2017-08-27T03:55:31Z"
 "12347325427423","NAB","import_code2","Australia","Bank","107","aud","true","atm deposit","Liu","2017-08-27T03:55:31Z","2017-08-27T03:55:31Z"
-"06332152347234","WESTPAC","import_code3","Australia","Bank","119.99","aud","true","fda,3cefvi,f532jfdlsa","Jack","2017-08-27T03:55:31Z","2017-08-27T03:55:31Z"
+"06332152347234","WESTPAC","import_code3","Australia","Bank","119.99","aud","true","fda,b8s6ihu,f532jfdlsa","Jack","2017-08-27T03:55:31Z","2017-08-27T03:55:31Z"

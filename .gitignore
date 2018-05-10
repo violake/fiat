@@ -20,10 +20,12 @@
 .byebug_history
 .rspec
 /.vscode
-/release
+/releases
 test.rb
 payments_testdata.csv
 PEAK INTERNATIONAL WESTPAC STATEMENT.csv
 Beyond Banking statement.csv
 /history
 /vendor
+*_local.sh
+.DS_Store

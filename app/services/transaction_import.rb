@@ -66,10 +66,12 @@ module Fiat
 
     # save to transactions table
     def save
-      @transaction_class = @module.constantize.const_get(@source_type.capitalize)
-      raise "source type unknown ! '#{@source_type}' " unless @transaction_class
-      @result = @transaction_class.import(@transactions)
-      @result[:filtered] = @read_size - @transactions.size
+      ActiveRecord::Base.transaction do
+        @transaction_class = @module.constantize.const_get(@source_type.capitalize)
+        raise "source type unknown ! '#{@source_type}' " unless @transaction_class
+        @result = @transaction_class.import(@transactions)
+        @result[:filtered] = @read_size - @transactions.size
+      end
     end
 
     # send data with customer_code to ACX via rabbitmq server

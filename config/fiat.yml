@@ -11,7 +11,7 @@ fiat: &default
   rails_env: "development"
   bank_accounts_filter: ["honesty_point", "acceptable_amount"]
   customer_code_mask: "pgh27fds8i"
-  customer_code_regex: '[\d]{1}[A-Za-z0-9]{5,11}'
+  customer_code_regex: '[A-Za-z0-9]{5,11}'
 
 bank:
   <<: *default
@@ -27,7 +27,7 @@ fiat_email:
   port: 587
   domain: 'gmail.com'
   username: 'roger.yuan.fang@gmail.com'
-  password: '80576755itcfzyy'
+  password: 'xxxxxxxxxxxx'
   from: 'roger.yuan.fang@gmail.com'
   from_alias: 'Fiat Mail'
   subject: "Bank statement Import Result"

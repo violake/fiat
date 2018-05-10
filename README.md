@@ -4,7 +4,7 @@
 
 ### Quick summary
 
-Fiat is a fiat payment import and reconcile system by sending payment to ACX and auto accept deposits.
+Fiat is a fiat payment import and reconcile system by sending payment to Comsumer and auto accept deposits.
 
 ### Versions
 

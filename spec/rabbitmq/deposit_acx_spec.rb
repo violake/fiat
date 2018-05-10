@@ -87,7 +87,7 @@ RSpec.describe BankServer do
     it 'return code when call generate customer code with valid params' do
       customer_code = @bs.getcustomercode(rpc["account_id"])
       expect(customer_code).not_to be_empty
-      expect(customer_code).to eq("1c3pv7")
+      expect(customer_code).to eq("d6r7m8")
     end
 
     it 'raise CodecalRPCError when call generate customer code with invalid params' do
@@ -95,8 +95,8 @@ RSpec.describe BankServer do
     end
 
     it 'return json(valid:true) when call validate customer code with valid params' do
-      rpc["customer_code"]="6c3pv9"
-      rpc["account_id"]="2"
+      rpc["customer_code"]="d6r7m8"
+      rpc["account_id"]="5"
       result = @bs.validatecustomercode(rpc["customer_code"], rpc["account_id"])
       expect(result).not_to be_empty
       expect(result[:isvalid]).to eq(true)
